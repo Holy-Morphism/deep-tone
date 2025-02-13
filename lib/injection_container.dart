@@ -7,6 +7,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'Messaging/presentation/bloc/messaging_bloc_bloc.dart';
+
 final GetIt locator = GetIt.instance;
 
 Future<void> setup() async {
@@ -15,6 +17,9 @@ Future<void> setup() async {
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL']!,
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+    realtimeClientOptions: const RealtimeClientOptions(
+      logLevel: RealtimeLogLevel.info,
+    ),
   );
 
   final supabase = Supabase.instance.client;
@@ -27,9 +32,14 @@ Future<void> setup() async {
   );
 
   // Initalising Authentication usecases
-  locator.registerSingleton<LogIn>(locator());
-  locator.registerSingleton<SignUp>(locator());
+  locator.registerSingleton<LogIn>(LogIn(locator()));
+  locator.registerSingleton<SignUp>(SignUp(locator()));
 
   // Initalising Authentication Bloc
-  locator.registerSingleton<AuthenticationBloc>(locator());
+  locator.registerFactory<AuthenticationBloc>(
+    () => AuthenticationBloc(logIn: locator(), signUp: locator()),
+  );
+
+  //Initialising messaging bloc
+  locator.registerSingleton<MessagingBloc>(MessagingBloc());
 }

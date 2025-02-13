@@ -20,12 +20,14 @@ class AuthenticationRepositoryImplementation
       final data =
           await locator<SupabaseClient>()
               .from('profiles')
-              .select('username, users!inner(email)')
+              .select('username')
               .eq('id', res.user!.id)
               .single();
 
       if (res.user != null) {
-        return Right(UserModel.fromMap(data));
+        return Right(
+          UserModel(username: data['username'], email: res.user!.email!),
+        );
       } else {
         return Left(
           AuthenticationFailure('Failed to create account, no user received'),
@@ -47,18 +49,18 @@ class AuthenticationRepositoryImplementation
         email: email,
         password: password,
       );
-      final data =
-          await locator<SupabaseClient>()
-              .from('profiles')
-              .select('username, users!inner(email)')
-              .eq('id', res.user!.id)
-              .single();
 
       if (res.user != null) {
-        return Right(UserModel.fromMap(data));
-      } else {
-        return Left(AuthenticationFailure("Failed to log In"));
+        // Create profile after successful signup
+        await locator<SupabaseClient>().from('profiles').insert({
+          'id': res.user!.id,
+          'username': username,
+          'created_at': DateTime.now().toIso8601String(),
+        });
       }
+
+      // Return user data
+      return Right(UserModel(email: email, username: username));
     } catch (e) {
       return Left(AuthenticationFailure(e.toString()));
     }

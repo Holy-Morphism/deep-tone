@@ -1,25 +1,25 @@
 part of 'auth_bloc.dart';
 
 @immutable
-sealed class AuthState {}
+sealed class AuthenticationState {}
 
-final class AuthenticationInitial extends AuthState {}
+final class AuthenticationInitial extends AuthenticationState {}
 
-final class AuthLoadingState extends AuthState {}
+final class AuthLoadingState extends AuthenticationState {}
 
-final class UnauthenticatedState extends AuthState {}
+final class UnauthenticatedState extends AuthenticationState {}
 
-final class AuthenticatedState extends AuthState {
+final class AuthenticatedState extends AuthenticationState {
   final UserEntity user;
   AuthenticatedState(this.user);
 }
 
-final class AuthErrorState extends AuthState {
+final class AuthErrorState extends AuthenticationState {
   final String message;
   AuthErrorState(this.message);
 }
 
-final class AuthIncorrectCredentialsState extends AuthState {
+final class AuthIncorrectCredentialsState extends AuthenticationState {
   final String message;
   AuthIncorrectCredentialsState(this.message);
 }

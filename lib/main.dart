@@ -1,7 +1,6 @@
 import 'package:ai_voice_coach/injection_container.dart';
-import 'package:ai_voice_coach/Authentication/presentation/screens/login_page.dart';
-import 'package:ai_voice_coach/Authentication/presentation/screens/signup_page.dart';
 import 'package:flutter/material.dart';
+import 'router/router.dart';
 
 void main() async {
   await setup();
@@ -13,6 +12,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(title: 'AI Voice Coach', home: SignUpPage());
+    return MaterialApp.router(title: 'AI Voice Coach', routerConfig: router);
   }
 }

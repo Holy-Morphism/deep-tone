@@ -13,6 +13,10 @@ class SignUp {
     required String email,
     required String username,
   }) {
-    return _authenticationRepository.logIn(password: password, email: email);
+    return _authenticationRepository.signUp(
+      password: password,
+      email: email,
+      username: username,
+    );
   }
 }

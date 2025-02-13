@@ -10,7 +10,8 @@ import 'package:equatable/equatable.dart';
 part 'auth_event.dart';
 part 'auth_state.dart';
 
-class AuthenticationBloc extends Bloc<AuthEvent, AuthState> {
+class AuthenticationBloc
+    extends Bloc<AuthenticationEvent, AuthenticationState> {
   final LogIn logIn;
   final SignUp signUp;
 
