@@ -3,11 +3,19 @@ import 'package:ai_voice_coach/Authentication/domain/repositories/authentication
 import 'package:ai_voice_coach/Authentication/domain/usecases/log_in.dart';
 import 'package:ai_voice_coach/Authentication/domain/usecases/sign_in.dart';
 import 'package:ai_voice_coach/Authentication/presentation/bloc/auth_bloc.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
+import 'package:pretty_dio_logger/pretty_dio_logger.dart';
+import 'package:record/record.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'Messaging/presentation/bloc/messaging_bloc_bloc.dart';
+import 'Messaging/data/repositories/messaging_repository_implementation.dart';
+import 'Messaging/domain/repositories/messaging_repository.dart';
+import 'Messaging/domain/usecases/get_mic_permission.dart';
+import 'Messaging/domain/usecases/start_recording.dart';
+import 'Messaging/domain/usecases/stop_recording.dart';
+import 'Messaging/presentation/bloc/messaging_bloc.dart';
 
 final GetIt locator = GetIt.instance;
 
@@ -40,6 +48,31 @@ Future<void> setup() async {
     () => AuthenticationBloc(logIn: locator(), signUp: locator()),
   );
 
-  //Initialising messaging bloc
-  locator.registerSingleton<MessagingBloc>(MessagingBloc());
+  //Initializing Dio and recorder
+  locator.registerSingleton<Dio>(Dio());
+  locator<Dio>().interceptors.add(PrettyDioLogger());
+  locator.registerSingleton<AudioRecorder>(AudioRecorder());
+
+  //Initializing Messaging Repository
+  locator.registerSingleton<MessagingRepository>(
+    MessagingRepositoryImplementation(
+      dio: locator(),
+      record: locator(),
+      openaiApiKey: dotenv.env['OPEN_AI_API_KEY']!,
+    ),
+  );
+
+  //Initializing Messaging Usecases
+  locator.registerSingleton<StartRecording>(StartRecording(locator()));
+  locator.registerSingleton<StopRecording>(StopRecording(locator()));
+  locator.registerSingleton<GetMicPermission>(GetMicPermission(locator()));
+
+  //Initializing Messaging Bloc
+  locator.registerFactory<MessagingBloc>(
+    () => MessagingBloc(
+      startRecording: locator(),
+      stopRecording: locator(),
+      getMicPermission: locator(),
+    ),
+  );
 }

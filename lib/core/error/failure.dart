@@ -18,3 +18,11 @@ class ConnectionFailure extends Failure {
 class AuthenticationFailure extends Failure {
   const AuthenticationFailure(super.message);
 }
+
+class RecordingFailure extends Failure {
+  const RecordingFailure(super.message);
+}
+
+class MicError extends Failure {
+  const MicError(super.message);
+}

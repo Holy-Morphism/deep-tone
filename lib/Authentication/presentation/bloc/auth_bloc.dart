@@ -17,6 +17,7 @@ class AuthenticationBloc
 
   AuthenticationBloc({required this.logIn, required this.signUp})
     : super(AuthenticationInitial()) {
+      
     on<SignUpEvent>((event, emit) async {
       emit(AuthLoadingState());
       final Either<Failure, UserEntity> result = await signUp(

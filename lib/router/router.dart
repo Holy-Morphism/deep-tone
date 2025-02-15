@@ -9,7 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../Messaging/presentation/bloc/messaging_bloc_bloc.dart';
+import '../Messaging/presentation/bloc/messaging_bloc.dart';
 import '../Messaging/presentation/screens/messages_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -33,7 +33,7 @@ final router = GoRouter(
       path: Routes.home,
       builder:
           (context, state) => BlocProvider(
-            create: (context) => locator<MessagingBloc>(),
+            create: (context) => locator<MessagingBloc>()..add(GetMicPermissionEvent()),
             child: const MessagingScreen(),
           ),
     ),
