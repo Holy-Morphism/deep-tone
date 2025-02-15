@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/error/failure.dart';
+import '../../domain/entities/model_message_entity.dart';
 import '../../domain/usecases/get_mic_permission.dart';
 import '../../domain/usecases/start_recording.dart';
 import '../../domain/usecases/stop_recording.dart';
@@ -44,8 +45,8 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
       emit(MessagingLoadingState());
       final result = await stopRecording();
       result.fold(
-        (failure) => MessagingErrorState(failure.message),
-        (success) => MessagingBlocInitial(),
+        (failure) => emit(MessagingErrorState(failure.message)),
+        (success) => emit(MessageSuccesState(modelMessageEntity: success)),
       );
     });
   }

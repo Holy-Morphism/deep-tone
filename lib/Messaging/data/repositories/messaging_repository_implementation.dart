@@ -4,9 +4,11 @@ import 'dart:io';
 import 'package:ai_voice_coach/Messaging/domain/entities/model_message_entity.dart';
 
 import 'package:ai_voice_coach/core/error/failure.dart';
+import 'package:ai_voice_coach/core/prompt/prompt.dart';
 
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
 import '../../domain/repositories/messaging_repository.dart';
@@ -25,22 +27,27 @@ class MessagingRepositoryImplementation implements MessagingRepository {
   @override
   Future<Either<Failure, void>> startRecording() async {
     try {
-      final directory = await Directory.systemTemp.createTemp(
-        'audio_recordings',
-      );
+      final Directory tempDir = await getTemporaryDirectory();
+
       final filePath =
-          '${directory.path}/recording_${DateTime.now().millisecondsSinceEpoch}.aac';
+          '${tempDir.path}/recording_${DateTime.now().millisecondsSinceEpoch}.wav';
+
+      print('Recording path: $filePath'); // Debug log
 
       if (await record.hasPermission()) {
         // Start recording with AAC format
+        print('Mic permission granted, starting recording...'); // Debug log
+
         await record.start(
           const RecordConfig(
             encoder: AudioEncoder.wav, // Changed from aacLc to wav
             bitRate: 128000,
             sampleRate: 44100,
+            numChannels: 1, // Add this
           ),
           path: filePath,
         );
+        print('Recording started successfully'); // Debug log
         return const Right(null);
       }
       return Left(RecordingFailure('Permission not granted'));
@@ -53,18 +60,25 @@ class MessagingRepositoryImplementation implements MessagingRepository {
   Future<Either<Failure, ModelMessageEntity>> stopRecording() async {
     try {
       final path = await record.stop();
+      print('Recording stopped, file path: $path'); // Debug log
+
       if (path == null) {
+        print('No recording file path returned'); // Debug log
         return Left(
           RecordingFailure('Recording failed: No file path returned'),
         );
       }
 
       final file = File(path);
+      final exists = await file.exists();
+      print('File exists: $exists'); // Debug log
+
       if (!await file.exists()) {
         return Left(RecordingFailure('Recording file not found'));
       }
 
       final bytes = await file.readAsBytes();
+      print('File size: ${bytes.length} bytes'); // Debug log
       final base64Audio = base64Encode(bytes);
 
       final requestBody = {
@@ -73,9 +87,14 @@ class MessagingRepositoryImplementation implements MessagingRepository {
         'audio': {'voice': 'alloy', 'format': 'wav'},
         'messages': [
           {
+            'role': 'system',
+            'content':
+                'You are a voice analyser expert. Please provide detailed review.',
+          },
+          {
             'role': 'user',
             'content': [
-              {'type': 'text', 'text': 'What is in this recording?'},
+              {'type': 'text', 'text': Prompts.prompt},
               {
                 'type': 'input_audio',
                 'input_audio': {'data': base64Audio, 'format': 'wav'},
@@ -109,8 +128,7 @@ class MessagingRepositoryImplementation implements MessagingRepository {
         return Left(RecordingFailure('Empty response from API'));
       }
 
-
-      return Right(ModelMessageModel.fromJson(response.data));
+      return Right(ModelMessageModel.fromJson(response.data, base64Audio));
     } catch (e) {
       return Left(
         RecordingFailure('Recording process failed: ${e.toString()}'),

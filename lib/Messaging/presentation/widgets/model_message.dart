@@ -1,15 +1,53 @@
 import 'package:flutter/material.dart';
 
+import '../../domain/entities/model_message_entity.dart';
+import 'audio_player.dart';
+
 class ModelMessage extends StatelessWidget {
-  final String message;
-  const ModelMessage({super.key, required this.message});
+  final ModelMessageEntity modelMessageEntity;
+  const ModelMessage({super.key, required this.modelMessageEntity});
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Text('🤖'),
-      title: Text('Model'),
-      subtitle: Text(message),
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const CircleAvatar(child: Text('🤖')),
+          const SizedBox(width: 8.0),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'AI Coach',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 4.0),
+                Text(modelMessageEntity.message),
+
+                // Padding(
+                //   padding: const EdgeInsets.only(top: 8.0),
+                //   child: Row(
+                //     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                //     children: [
+                //       AudioPlayerWidget(
+                //         base64Audio: modelMessageEntity.recordedAudio,
+                //         label: 'Your Recording',
+                //       ),
+                //       AudioPlayerWidget(
+                //         base64Audio: modelMessageEntity.modelAudio,
+                //         label: 'AI Response',
+                //       ),
+                //     ],
+                //   ),
+                // ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

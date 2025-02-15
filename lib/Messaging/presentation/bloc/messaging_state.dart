@@ -26,6 +26,11 @@ final class MessagingLoadingState extends MessagingState {}
 
 final class RecordingState extends MessagingState {}
 
+final class MessageSuccesState extends MessagingState {
+  final ModelMessageEntity modelMessageEntity;
+  const MessageSuccesState({required this.modelMessageEntity});
+}
+
 final class MessagingErrorState extends MessagingState {
   final String message;
   const MessagingErrorState(this.message);

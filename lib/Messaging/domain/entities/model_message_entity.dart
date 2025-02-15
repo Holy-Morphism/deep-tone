@@ -1,11 +1,16 @@
 import 'package:equatable/equatable.dart';
 
 class ModelMessageEntity extends Equatable {
-  final String transcription;
-  final String audio;
+  final String message;
+  final String recordedAudio;
+  final String modelAudio;
 
-  const ModelMessageEntity({required this.transcription, required this.audio});
+  const ModelMessageEntity({
+    required this.message,
+    required this.recordedAudio,
+    required this.modelAudio,
+  });
 
   @override
-  List<Object> get props => [transcription, audio];
+  List<Object?> get props => [message, recordedAudio, modelAudio];
 }
