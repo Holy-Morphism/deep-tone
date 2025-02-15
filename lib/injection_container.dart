@@ -1,8 +1,8 @@
-import 'package:ai_voice_coach/Authentication/data/repositories/authentication_repository_implementation.dart';
-import 'package:ai_voice_coach/Authentication/domain/repositories/authentication_repository.dart';
-import 'package:ai_voice_coach/Authentication/domain/usecases/log_in.dart';
-import 'package:ai_voice_coach/Authentication/domain/usecases/sign_in.dart';
-import 'package:ai_voice_coach/Authentication/presentation/bloc/auth_bloc.dart';
+import 'package:deeptone/Authentication/data/repositories/authentication_repository_implementation.dart';
+import 'package:deeptone/Authentication/domain/repositories/authentication_repository.dart';
+import 'package:deeptone/Authentication/domain/usecases/log_in.dart';
+import 'package:deeptone/Authentication/domain/usecases/sign_in.dart';
+import 'package:deeptone/Authentication/presentation/bloc/auth_bloc.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';

@@ -1,4 +1,4 @@
-import 'package:ai_voice_coach/Authentication/presentation/widgets/user_input.dart';
+import 'package:deeptone/Authentication/presentation/widgets/user_input.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

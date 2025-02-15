@@ -1,4 +1,4 @@
-# ai_voice_coach
+# deeptone
 
 A new Flutter project.
 

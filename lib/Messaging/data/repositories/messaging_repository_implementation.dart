@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:ai_voice_coach/Messaging/domain/entities/model_message_entity.dart';
+import 'package:deeptone/Messaging/domain/entities/model_message_entity.dart';
 
-import 'package:ai_voice_coach/core/error/failure.dart';
-import 'package:ai_voice_coach/core/prompt/prompt.dart';
+import 'package:deeptone/core/error/failure.dart';
+import 'package:deeptone/core/prompt/prompt.dart';
 
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';

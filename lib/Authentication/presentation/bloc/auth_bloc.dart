@@ -1,7 +1,7 @@
-import 'package:ai_voice_coach/Authentication/domain/entities/user_entity.dart';
-import 'package:ai_voice_coach/Authentication/domain/usecases/log_in.dart';
-import 'package:ai_voice_coach/Authentication/domain/usecases/sign_in.dart';
-import 'package:ai_voice_coach/core/error/failure.dart';
+import 'package:deeptone/Authentication/domain/entities/user_entity.dart';
+import 'package:deeptone/Authentication/domain/usecases/log_in.dart';
+import 'package:deeptone/Authentication/domain/usecases/sign_in.dart';
+import 'package:deeptone/core/error/failure.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,7 +17,6 @@ class AuthenticationBloc
 
   AuthenticationBloc({required this.logIn, required this.signUp})
     : super(AuthenticationInitial()) {
-      
     on<SignUpEvent>((event, emit) async {
       emit(AuthLoadingState());
       final Either<Failure, UserEntity> result = await signUp(

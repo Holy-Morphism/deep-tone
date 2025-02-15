@@ -1,5 +1,5 @@
-import 'package:ai_voice_coach/Authentication/domain/entities/user_entity.dart';
-import 'package:ai_voice_coach/core/error/failure.dart';
+import 'package:deeptone/Authentication/domain/entities/user_entity.dart';
+import 'package:deeptone/core/error/failure.dart';
 import 'package:dartz/dartz.dart';
 
 abstract class AuthenticationRepository {

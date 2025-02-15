@@ -1,4 +1,4 @@
-import 'package:ai_voice_coach/injection_container.dart';
+import 'package:deeptone/injection_container.dart';
 import 'package:flutter/material.dart';
 import 'router/router.dart';
 
@@ -12,6 +12,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(title: 'AI Voice Coach', routerConfig: router);
+    return MaterialApp.router(title: 'Deep Tone', routerConfig: router);
   }
 }
