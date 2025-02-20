@@ -6,7 +6,6 @@ import 'package:deeptone/Authentication/presentation/bloc/auth_bloc.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
-import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:record/record.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -50,7 +49,7 @@ Future<void> setup() async {
 
   //Initializing Dio and recorder
   locator.registerSingleton<Dio>(Dio());
-  locator<Dio>().interceptors.add(PrettyDioLogger());
+  //locator<Dio>().interceptors.add(PrettyDioLogger(requestBody: false));
   locator.registerSingleton<AudioRecorder>(AudioRecorder());
 
   //Initializing Messaging Repository
@@ -59,6 +58,7 @@ Future<void> setup() async {
       dio: locator(),
       record: locator(),
       openaiApiKey: dotenv.env['OPEN_AI_API_KEY']!,
+      deepGramApiKey: dotenv.env['DEEPGRAM_API_KEY']!,
     ),
   );
 

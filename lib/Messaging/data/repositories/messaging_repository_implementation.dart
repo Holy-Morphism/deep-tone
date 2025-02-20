@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:deeptone/Messaging/domain/entities/model_message_entity.dart';
 
@@ -9,6 +10,7 @@ import 'package:deeptone/core/prompt/prompt.dart';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pitch_detector_dart/pitch_detector.dart';
 import 'package:record/record.dart';
 
 import '../../domain/repositories/messaging_repository.dart';
@@ -18,10 +20,13 @@ class MessagingRepositoryImplementation implements MessagingRepository {
   final Dio dio;
   final AudioRecorder record;
   final String openaiApiKey;
+  final String deepGramApiKey;
+
   const MessagingRepositoryImplementation({
     required this.dio,
     required this.record,
     required this.openaiApiKey,
+    required this.deepGramApiKey,
   });
 
   @override
@@ -41,9 +46,9 @@ class MessagingRepositoryImplementation implements MessagingRepository {
         await record.start(
           const RecordConfig(
             encoder: AudioEncoder.wav, // Changed from aacLc to wav
-            bitRate: 128000,
+            bitRate: 256000,
             sampleRate: 44100,
-            numChannels: 1, // Add this
+            numChannels: 2,
           ),
           path: filePath,
         );
@@ -53,6 +58,40 @@ class MessagingRepositoryImplementation implements MessagingRepository {
       return Left(RecordingFailure('Permission not granted'));
     } catch (e) {
       return Left(RecordingFailure(e.toString()));
+    }
+  }
+
+  Future<Either<Failure, String>> analyzeAudioWithDeepgram(
+    List<int> audioBytes,
+  ) async {
+    try {
+      final response = await dio.post(
+        'https://api.deepgram.com/v1/listen',
+        data: Stream.fromIterable([audioBytes]),
+        queryParameters: {'model': 'nova-2', 'smart_format': 'true'},
+        options: Options(
+          headers: {
+            'Authorization': 'Token $deepGramApiKey',
+            'Content-Type': 'audio/wav',
+          },
+          responseType: ResponseType.json,
+        ),
+      );
+
+      if (response.statusCode != 200) {
+        return Left(
+          RecordingFailure('Deepgram API failed: ${response.statusCode}'),
+        );
+      }
+
+      return Right(
+        response
+            .data['results']['channels'][0]['alternatives'][0]['transcript'],
+      );
+    } catch (e) {
+      return Left(
+        RecordingFailure('Deepgram analysis failed: ${e.toString()}'),
+      );
     }
   }
 
@@ -78,8 +117,17 @@ class MessagingRepositoryImplementation implements MessagingRepository {
       }
 
       final bytes = await file.readAsBytes();
-      print('File size: ${bytes.length} bytes'); // Debug log
       final base64Audio = base64Encode(bytes);
+      // Add Deepgram analysis
+      final transcriptionResult = await analyzeAudioWithDeepgram(bytes);
+
+      // Handle transcription result
+      final transcription = transcriptionResult.fold(
+        (failure) => 'Transcription failed',
+        (transcript) => transcript,
+      );
+
+      print('Transcription: $transcription');
 
       final requestBody = {
         'model': 'gpt-4o-audio-preview-2024-12-17',
