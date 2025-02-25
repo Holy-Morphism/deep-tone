@@ -59,6 +59,8 @@ Future<void> setup() async {
       record: locator(),
       openaiApiKey: dotenv.env['OPEN_AI_API_KEY']!,
       deepGramApiKey: dotenv.env['DEEPGRAM_API_KEY']!,
+      dolbyApiKey: dotenv.env['DOLBY_API_KEY']!,
+      dolbyAppSecret: dotenv.env['DOLBY_API_SECRET']!
     ),
   );
 

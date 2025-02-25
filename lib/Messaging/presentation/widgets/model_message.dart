@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/entities/model_message_entity.dart';
-import 'audio_player.dart';
 
 class ModelMessage extends StatelessWidget {
   final ModelMessageEntity modelMessageEntity;

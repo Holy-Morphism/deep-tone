@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:deeptone/Messaging/data/models/voice_analysis_model.dart';
 import 'package:deeptone/Messaging/domain/entities/model_message_entity.dart';
 
 import 'package:deeptone/core/error/failure.dart';
@@ -14,6 +15,7 @@ import 'package:pitch_detector_dart/pitch_detector.dart';
 import 'package:record/record.dart';
 
 import '../../domain/repositories/messaging_repository.dart';
+import '../datasources/dolby_service.dart';
 import '../models/model_message_model.dart';
 
 class MessagingRepositoryImplementation implements MessagingRepository {
@@ -21,13 +23,25 @@ class MessagingRepositoryImplementation implements MessagingRepository {
   final AudioRecorder record;
   final String openaiApiKey;
   final String deepGramApiKey;
+  final String dolbyApiKey;
+  final String dolbyAppSecret;
+  late final DolbyService _dolbyService;
 
-  const MessagingRepositoryImplementation({
+
+  MessagingRepositoryImplementation({
     required this.dio,
     required this.record,
     required this.openaiApiKey,
     required this.deepGramApiKey,
-  });
+    required this.dolbyApiKey,
+    required this.dolbyAppSecret,
+  }) {
+    _dolbyService = DolbyService(
+      apiKey: dolbyApiKey,
+      appSecret: dolbyAppSecret,
+      dio: dio,
+    );
+  }
 
   @override
   Future<Either<Failure, void>> startRecording() async {
@@ -48,7 +62,7 @@ class MessagingRepositoryImplementation implements MessagingRepository {
             encoder: AudioEncoder.wav, // Changed from aacLc to wav
             bitRate: 256000,
             sampleRate: 44100,
-            numChannels: 2,
+            numChannels: 1,
           ),
           path: filePath,
         );
@@ -60,6 +74,71 @@ class MessagingRepositoryImplementation implements MessagingRepository {
       return Left(RecordingFailure(e.toString()));
     }
   }
+
+  Future<Either<Failure, double>> detectPitch(Uint8List audioData) async {
+    try {
+      print('Starting pitch detection. Audio data length: ${audioData.length}');
+
+      // Convert audio data to PCM16 format if needed
+      List<int> pcm16Data = [];
+      for (int i = 0; i < audioData.length; i += 2) {
+        if (i + 1 < audioData.length) {
+          int sample = (audioData[i + 1] << 8) | audioData[i];
+          pcm16Data.add(sample);
+        }
+      }
+
+      final pitchDetector = PitchDetector(
+        audioSampleRate: 44100,
+        bufferSize: 4096, // Increased buffer size
+      );
+
+      List<double> pitches = [];
+      int validPitchCount = 0;
+
+      // Process in overlapping windows for better detection
+      for (var i = 0; i < pcm16Data.length - 4096; i += 2048) {
+        final chunk = Uint8List.fromList(
+          pcm16Data
+              .sublist(i, i + 4096)
+              .expand((x) => [x & 0xFF, (x >> 8) & 0xFF])
+              .toList(),
+        );
+
+        final result = await pitchDetector.getPitchFromIntBuffer(chunk);
+
+        if (result.pitched && result.pitch >= 50 && result.pitch <= 500) {
+          // Only accept reasonable human voice frequencies
+          pitches.add(result.pitch);
+          validPitchCount++;
+          print('Valid pitch detected: ${result.pitch} Hz');
+        }
+      }
+
+      print('Total valid pitches detected: $validPitchCount');
+
+      if (pitches.isNotEmpty) {
+        // Remove outliers
+        pitches.sort();
+        var q1Index = (pitches.length * 0.25).floor();
+        var q3Index = (pitches.length * 0.75).floor();
+        var filtered = pitches.sublist(q1Index, q3Index + 1);
+
+        double averagePitch =
+            filtered.reduce((a, b) => a + b) / filtered.length;
+        print('Final average pitch: $averagePitch Hz');
+        return Right(averagePitch);
+      } else {
+        print('No valid pitches detected in the audio sample');
+        return const Left(RecordingFailure('No valid pitch detected'));
+      }
+    } catch (e, stackTrace) {
+      print('Pitch detection error: $e');
+      print('Stack trace: $stackTrace');
+      return Left(RecordingFailure('Pitch detection failed: ${e.toString()}'));
+    }
+  }
+
 
   Future<Either<Failure, String>> analyzeAudioWithDeepgram(
     List<int> audioBytes,
@@ -101,33 +180,146 @@ class MessagingRepositoryImplementation implements MessagingRepository {
       final path = await record.stop();
       print('Recording stopped, file path: $path'); // Debug log
 
-      if (path == null) {
-        print('No recording file path returned'); // Debug log
-        return Left(
-          RecordingFailure('Recording failed: No file path returned'),
-        );
+     if (path == null) {
+        print('No recording file path returned');
+        return Left(RecordingFailure('Recording failed: No file path returned'));
       }
 
       final file = File(path);
-      final exists = await file.exists();
-      print('File exists: $exists'); // Debug log
-
       if (!await file.exists()) {
         return Left(RecordingFailure('Recording file not found'));
       }
 
       final bytes = await file.readAsBytes();
       final base64Audio = base64Encode(bytes);
-      // Add Deepgram analysis
-      final transcriptionResult = await analyzeAudioWithDeepgram(bytes);
+      final filename = 'recording_${DateTime.now().millisecondsSinceEpoch}.wav';
 
-      // Handle transcription result
-      final transcription = transcriptionResult.fold(
-        (failure) => 'Transcription failed',
-        (transcript) => transcript,
+
+       // Dolby.io Flow
+      // 1. Get upload URL
+      final uploadUrlResult = await _dolbyService.getUploadUrl(filename);
+      final dolbyAnalysisResult =  uploadUrlResult.fold(
+        (failure) => Left(failure),
+        (uploadUrl) async {
+          // 2. Upload file
+          final uploadResult = await _dolbyService.uploadFile(uploadUrl, bytes);
+          return uploadResult.fold(
+            (failure) => Left(failure),
+            (_) async {
+              // 3. Start analysis
+              final analysisResult = await _dolbyService.analyzeSpeech(filename);
+              return analysisResult;
+            },
+          );
+        },
       );
 
-      print('Transcription: $transcription');
+      // Parallel API calls for other services
+      final Future<Either<Failure, String>> deepgramFuture =
+          analyzeAudioWithDeepgram(bytes);
+      final Future<Either<Failure, double>> pitchFuture = detectPitch(bytes);
+
+      // Wait for all analyses to complete
+      final results = await Future.wait([
+        Future.value(dolbyAnalysisResult),
+        deepgramFuture,
+        pitchFuture,
+      ]);
+
+       // Extract results
+      final dolbyResult = results[0] as Either<Failure, Map<String, dynamic>>;
+      final deepgramResult = results[1] as Either<Failure, String>;
+      final pitchResult = results[2] as Either<Failure, double>;
+
+
+
+     // Create voice analysis model
+      final voiceAnalysis = deepgramResult.fold(
+        (failure) => null,
+        (deepgramData) => dolbyResult.fold(
+          (failure) => null,
+          (dolbyData) => VoiceAnalysisModel.fromApis(
+            dolbyResponse: dolbyData,
+            deepgramResponse: {
+              'results': {
+                'channels': [
+                  {
+                    'alternatives': [
+                      {'transcript': deepgramData}
+                    ]
+                  }
+                ]
+              }
+            },
+          ),
+        ),
+      );
+
+      // After creating the voice analysis model, add this logging section:
+      if (voiceAnalysis != null) {
+        print('\n=== Voice Analysis Results ===');
+        print('Speech Metrics:');
+        print('- Pitch:');
+        print('  • Mean: ${voiceAnalysis.speechMetrics.pitch.meanPitch} Hz');
+        print('  • Variance: ${voiceAnalysis.speechMetrics.pitch.variance}');
+        print(
+          '  • Score: ${voiceAnalysis.speechMetrics.pitch.normalizedScore}/100',
+        );
+
+        print('\nVolume:');
+        print('  • Mean: ${voiceAnalysis.speechMetrics.volume.meanVolume}');
+        print(
+          '  • Consistency: ${voiceAnalysis.speechMetrics.volume.consistency}%',
+        );
+        print(
+          '  • Score: ${voiceAnalysis.speechMetrics.volume.normalizedScore}/100',
+        );
+
+        print('\nPace:');
+        print(
+          '  • Words per minute: ${voiceAnalysis.speechMetrics.pace.wordsPerMinute}',
+        );
+        print(
+          '  • Total words: ${voiceAnalysis.speechMetrics.pace.totalWords}',
+        );
+        print('  • Duration: ${voiceAnalysis.speechMetrics.pace.duration}s');
+        print(
+          '  • Score: ${voiceAnalysis.speechMetrics.pace.normalizedScore}/100',
+        );
+
+        print(
+          '\nArticulation Score: ${voiceAnalysis.speechMetrics.articulationScore * 100}/100',
+        );
+        print(
+          'Confidence Score: ${voiceAnalysis.speechMetrics.confidenceScore * 100}/100',
+        );
+        print('\nOverall Score: ${voiceAnalysis.overallScore}/100');
+
+        print('\nTranscription:');
+        print('Text: ${voiceAnalysis.transcription.text}');
+        print('Confidence: ${voiceAnalysis.transcription.confidence}');
+
+        print('\nWord-by-word analysis:');
+        for (var word in voiceAnalysis.transcription.words) {
+          print(
+            '• "${word.punctuatedWord}": ${(word.confidence * 100).toStringAsFixed(1)}% confidence',
+          );
+        }
+        print('================================\n');
+      } else {
+        print('Warning: Voice analysis model creation failed');
+        print(
+          'Deepgram Result: ${deepgramResult.fold((failure) => 'Failed: ${failure.message}', (success) => 'Success')}',
+        );
+        print(
+          'Dolby Result: ${dolbyResult.fold((failure) => 'Failed: ${failure.message}', (success) => 'Success')}',
+        );
+        print(
+          'Pitch Result: ${pitchResult.fold((failure) => 'Failed: ${failure.message}', (success) => '$success Hz')}',
+        );
+      }
+
+      // Then continue with the existing requestBody creation...
 
       final requestBody = {
         'model': 'gpt-4o-audio-preview-2024-12-17',
@@ -166,11 +358,6 @@ class MessagingRepositoryImplementation implements MessagingRepository {
       // Clean up temporary file
       await file.delete();
 
-      if (response.statusCode != 200) {
-        return Left(
-          RecordingFailure('API request failed: ${response.statusCode}'),
-        );
-      }
 
       if (response.data == null) {
         return Left(RecordingFailure('Empty response from API'));
