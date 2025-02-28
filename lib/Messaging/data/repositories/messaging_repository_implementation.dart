@@ -1,20 +1,16 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:deeptone/Messaging/domain/entities/model_message_entity.dart';
 
 import 'package:deeptone/core/error/failure.dart';
-import 'package:deeptone/core/prompt/prompt.dart';
 
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
 import '../../domain/repositories/messaging_repository.dart';
 import '../datasources/deepgram_service.dart';
 import '../datasources/dolby_service.dart';
 import '../datasources/pitch_service.dart';
+import '../services.dart/recording_service.dart';
 
 class MessagingRepositoryImplementation implements MessagingRepository {
   final Dio dio;
@@ -26,6 +22,7 @@ class MessagingRepositoryImplementation implements MessagingRepository {
   late final DolbyService _dolbyService;
   late final PitchService _pitchService;
   late final DeepgramService _deepgramService;
+  late final RecordingService _recordingService;
 
   MessagingRepositoryImplementation({
     required this.dio,
@@ -42,94 +39,31 @@ class MessagingRepositoryImplementation implements MessagingRepository {
     );
     _deepgramService = DeepgramService(dio: dio, apiKey: deepGramApiKey);
     _pitchService = PitchService();
+    _recordingService = RecordingService(audioRecorder: AudioRecorder());
   }
 
   @override
   Future<Either<Failure, void>> startRecording() async {
-    try {
-      final Directory tempDir = await getTemporaryDirectory();
-
-      final filePath =
-          '${tempDir.path}/recording_${DateTime.now().millisecondsSinceEpoch}.wav';
-
-      print('Recording path: $filePath'); // Debug log
-
-      if (await record.hasPermission()) {
-        // Start recording with AAC format
-        print('Mic permission granted, starting recording...'); // Debug log
-
-        await record.start(
-          const RecordConfig(
-            encoder: AudioEncoder.wav, // Changed from aacLc to wav
-            bitRate: 256000,
-            sampleRate: 44100,
-            numChannels: 1,
-          ),
-          path: filePath,
-        );
-        print('Recording started successfully'); // Debug log
-        return const Right(null);
-      }
-      return Left(RecordingFailure('Permission not granted'));
-    } catch (e) {
-      return Left(RecordingFailure(e.toString()));
-    }
-  }
-
-  Future<Either<Failure, String>> analyzeAudioWithDeepgram(
-    List<int> audioBytes,
-  ) async {
-    try {
-      final response = await dio.post(
-        'https://api.deepgram.com/v1/listen',
-        data: Stream.fromIterable([audioBytes]),
-        queryParameters: {'model': 'nova-2', 'smart_format': 'true'},
-        options: Options(
-          headers: {
-            'Authorization': 'Token $deepGramApiKey',
-            'Content-Type': 'audio/wav',
-          },
-          responseType: ResponseType.json,
-        ),
-      );
-
-      if (response.statusCode != 200) {
-        return Left(
-          RecordingFailure('Deepgram API failed: ${response.statusCode}'),
-        );
-      }
-
-      return Right(
-        response
-            .data['results']['channels'][0]['alternatives'][0]['transcript'],
-      );
-    } catch (e) {
-      return Left(
-        RecordingFailure('Deepgram analysis failed: ${e.toString()}'),
-      );
-    }
+    return _recordingService.startRecording();
   }
 
   @override
   Future<Either<Failure, ModelMessageEntity>> stopRecording() async {
     try {
-      final path = await record.stop();
-      print('Recording stopped, file path: $path'); // Debug log
-
-      if (path == null) {
-        print('No recording file path returned');
-        return Left(
-          RecordingFailure('Recording failed: No file path returned'),
+      final result = await _recordingService.stopRecording();
+      if (result.isLeft()) {
+        return result.fold(
+          (failure) => Left(failure),
+          (_) => throw Exception('Unreachable'),
         );
       }
-
-      final file = File(path);
-      if (!await file.exists()) {
-        return Left(RecordingFailure('Recording file not found'));
-      }
+      final file = result.fold(
+        (_) => throw Exception('Unreachable'),
+        (success) => success,
+      );
 
       final bytes = await file.readAsBytes();
-      final base64Audio = base64Encode(bytes);
+      //final base64Audio = base64Encode(bytes);
       final filename = 'recording_${DateTime.now().millisecondsSinceEpoch}.wav';
 
       // Dolby.io Flow
@@ -186,46 +120,8 @@ class MessagingRepositoryImplementation implements MessagingRepository {
         print(loudness);
       }
 
-      final requestBody = {
-        'model': 'gpt-4o-audio-preview-2024-12-17',
-        'modalities': ['audio', 'text'],
-        'audio': {'voice': 'alloy', 'format': 'wav'},
-        'messages': [
-          {
-            'role': 'system',
-            'content':
-                'You are a voice analyser expert. Please provide detailed review.',
-          },
-          {
-            'role': 'user',
-            'content': [
-              {'type': 'text', 'text': Prompts.prompt},
-              {
-                'type': 'input_audio',
-                'input_audio': {'data': base64Audio, 'format': 'wav'},
-              },
-            ],
-          },
-        ],
-      };
-
-      final response = await dio.post(
-        'https://api.openai.com/v1/chat/completions',
-        data: requestBody,
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $openaiApiKey',
-          },
-        ),
-      );
-
       // Clean up temporary file
       await file.delete();
-
-      if (response.data == null) {
-        return Left(RecordingFailure('Empty response from API'));
-      }
 
       return Right(
         ModelMessageEntity(
