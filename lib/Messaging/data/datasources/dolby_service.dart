@@ -144,6 +144,7 @@ class DolbyService {
     }
   }
 
+  // Replace the entire analyzeSpeech method
   Future<Either<Failure, Map<String, dynamic>>> analyzeSpeech(
     String inputFilename,
   ) async {
@@ -151,82 +152,77 @@ class DolbyService {
       if (!hasValidToken) {
         return Left(RecordingFailure('No valid token available'));
       }
+
       print('File Name $inputFilename');
       print(
         "file anme aft json tag ${inputFilename.replaceAll('.wav', '-metadata.json')}",
       );
-      try {
-        final response = await dio.post(
-          'https://api.dolby.com/media/analyze/speech',
-          options: Options(
-            headers: {
-              'Authorization': 'Bearer $_accessToken',
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-          ),
-          data: jsonEncode({
-            "input": "dlb://in/$inputFilename",
-            "output":
-                "dlb://out/${inputFilename.replaceAll('.wav', '-metadata.json')}",
-          }),
+
+      final response = await dio.post(
+        'https://api.dolby.com/media/analyze/speech',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $_accessToken',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+        data: jsonEncode({
+          "input": "dlb://in/$inputFilename",
+          "output":
+              "dlb://out/${inputFilename.replaceAll('.wav', '-metadata.json')}",
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        print('Speech analysis failed: ${response.statusCode}');
+        return Left(RecordingFailure('Speech analysis failed'));
+      }
+
+      print('Speech analysis job initiated successfully');
+      print('Response data: ${jsonEncode(response.data)}');
+
+      // Get the job ID from the response
+      final jobId = response.data['job_id'];
+
+      // Poll for job completion
+      int attempts = 0;
+      while (attempts < 30) {
+        final jobStatusResult = await getJobStatus(jobId);
+
+        if (jobStatusResult.isLeft()) {
+          // If we got a failure, return it
+          return jobStatusResult;
+        }
+
+        // Extract status data from Right
+        final statusData = jobStatusResult.fold(
+          (l) =>
+              <
+                String,
+                dynamic
+              >{}, // This won't be used because we checked isLeft above
+          (r) => r,
         );
 
-        if (response.statusCode != 200) {
-          print('Speech analysis failed: ${response.statusCode}');
-          return Left(RecordingFailure('Speech analysis failed'));
+        // Check if job is complete
+        if (statusData['status'] == 'Success') {
+          return Right(statusData);
+        } else if (statusData['status'] == 'failed') {
+          return Left(RecordingFailure('Speech analysis job failed'));
         }
 
-        print('Speech analysis job initiated successfully');
-        print('Response data: ${jsonEncode(response.data)}');
-
-        // Get the job ID from the response
-        final jobId = response.data['job_id'];
-
-        // Poll for job completion
-        int attempts = 0;
-        while (attempts < 30) {
-          final jobStatus = await getJobStatus(jobId);
-
-          final result = await jobStatus.fold(
-            (failure) => Future.value(Left(failure)),
-            (statusData) {
-              if (statusData['status'] == 'Success') {
-                return Future.value(Right(statusData));
-              } else if (statusData['status'] == 'failed') {
-                return Future.value(
-                  Left(RecordingFailure('Speech analysis job failed')),
-                );
-              }
-              return Future.value(null);
-            },
-          );
-
-          if (result != null) {
-            return result as Either<Failure, Map<String, dynamic>>;
-          }
-
-          await Future.delayed(const Duration(seconds: 2));
-          attempts++;
-        }
-
-        return Left(RecordingFailure('Speech analysis timeout'));
-      } catch (e) {
-        print('Error analyzing speech: $e');
-        return Left(RecordingFailure('Speech analysis failed: $e'));
+        // Wait before checking again
+        await Future.delayed(const Duration(seconds: 2));
+        attempts++;
       }
+
+      return Left(RecordingFailure('Speech analysis timeout'));
     } catch (e) {
-      print('Error in analyzeSpeech: $e');
+      print('Error analyzing speech: $e');
       return Left(RecordingFailure('Speech analysis failed: $e'));
     }
   }
-
-  // Example usage
-  // final analysisResult = await dolbyService.analyzeSpeech('recording.wav');
-  // analysisResult.fold(
-  //   (failure) => print('Analysis failed: ${failure.message}'),
-  //   (result) => print('Analysis complete: ${json.encode(result)}'),
-  // );
 
   // Add this method to the DolbyService class
   Future<Either<Failure, Map<String, dynamic>>> getJobStatus(
@@ -287,9 +283,7 @@ class DolbyService {
   // );
   // Add this method to the DolbyService class
 
-  Future<Either<Failure, Map<String, dynamic>>> getOutput(
-    String outputFilename,
-  ) async {
+  Future<Either<Failure, dynamic>> getOutput(String outputFilename) async {
     try {
       if (!hasValidToken) {
         return Left(RecordingFailure('No valid token available'));
@@ -305,12 +299,24 @@ class DolbyService {
               'Accept': 'application/json',
             },
           ),
-          queryParameters: {'url': 'dlb://out/$outputFilename'},
+          queryParameters: {'url': 'dlb://out/${outputFilename.replaceAll('.wav', '-metadata.json')}'},
         );
 
         if (response.statusCode != 200) {
           print('Failed to get output: ${response.statusCode}');
           return Left(RecordingFailure('Failed to get analysis output'));
+        }
+
+        // Parse the response data
+        if (response.data is String) {
+          try {
+            final decodedData = jsonDecode(response.data);
+            print('Successfully retrieved and parsed analysis output');
+            return Right(decodedData);
+          } catch (e) {
+            print('Error parsing JSON response: $e');
+            return Left(RecordingFailure('Failed to parse analysis output'));
+          }
         }
 
         print('Successfully retrieved analysis output');

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'router/router.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await setup();
   runApp(const MyApp());
 }

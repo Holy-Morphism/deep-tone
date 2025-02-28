@@ -24,7 +24,7 @@ class ModelMessage extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 4.0),
-                Text(modelMessageEntity.message),
+                Text(modelMessageEntity.report),
 
                 // Padding(
                 //   padding: const EdgeInsets.only(top: 8.0),
