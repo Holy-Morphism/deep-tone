@@ -57,14 +57,22 @@ class _MessagingScreenState extends State<MessagingScreen> {
                       state is RecordingState ? Icons.stop : Icons.mic,
                     ),
                   ),
-          body:
-              state is GettingMicPermissionState
-                  ? Center(child: Text('Geetting Mic permission'))
-                  : state is MessageSuccesState
-                  ? ModelMessage(modelMessageEntity: state.modelMessageEntity)
-                  : state is MessagingLoadingState
-                  ? ResponseLoading()
-                  : null,
+          body: SafeArea(
+            child:
+                state is GettingMicPermissionState
+                    ? Center(child: Text('Getting Mic permission'))
+                    : state is MessageSuccesState
+                    ? SingleChildScrollView(
+                      child: ModelMessage(
+                        modelMessageEntity: state.modelMessageEntity,
+                      ),
+                    )
+                    : state is MessagingLoadingState
+                    ? ResponseLoading()
+                    : Center(
+                      child: Text("Press the mic button to start recording"),
+                    ),
+          ),
         );
       },
     );

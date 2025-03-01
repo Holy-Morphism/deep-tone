@@ -132,12 +132,12 @@ class MessagingRepositoryImplementation implements MessagingRepository {
       if (deepgramResult is Right) {
         final Map<String, dynamic> data = deepgramResult.value;
         transcript = data['transcript'] ?? "";
-        paceScore = data['wordsPerMinute'] ?? 0;
+        paceScore = data['wordsPerMinute'] ?? 0.0;
       }
       print("Transcript: $transcript");
       print("Pace score: $paceScore");
       if (pitchResult is Right) {
-        pitchScore = pitchResult.value ?? 0;
+        pitchScore = pitchResult.value ?? 0.0;
       }
       print("Pitch Score: ${pitchScore}");
       // Clean up temporary file
@@ -146,6 +146,8 @@ class MessagingRepositoryImplementation implements MessagingRepository {
         pronunciationAccuracyScore =
             ratio(_generatedPassage, transcript).toDouble();
       }
+
+      print("Pronounicaation Accuracy :$pronunciationAccuracyScore");
 
       await file.delete();
 
@@ -158,6 +160,8 @@ class MessagingRepositoryImplementation implements MessagingRepository {
         pronunciationAccuracy: pronunciationAccuracyScore,
         confidence: confidenceScore,
       );
+
+      print("Report : $report");
 
       final resultModelMessageEntity = ModelMessageEntity(
         report: report,
@@ -174,6 +178,7 @@ class MessagingRepositoryImplementation implements MessagingRepository {
 
       return Right(resultModelMessageEntity);
     } catch (e) {
+      print(e.toString());
       return Left(
         RecordingFailure('Recording process failed: ${e.toString()}'),
       );

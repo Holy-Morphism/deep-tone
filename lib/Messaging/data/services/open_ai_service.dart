@@ -8,7 +8,7 @@ class OpenAIService {
 
   Future<String> generatePassage() async {
     final response = await dio.post(
-      ' https://api.openai.com/v1/chat/completions',
+      'https://api.openai.com/v1/chat/completions',
       options: Options(
         headers: {
           'Authorization': 'Bearer $openaiApiKey',
@@ -54,20 +54,51 @@ class OpenAIService {
     required double confidence,
   }) async {
     final String prompt = """
-I have collected several parameters related to my voice from an audio analysis system. Here are the details:
+1. These parameters have been collected be a audio analysis system.
+2. Based on these values, please generate a detailed report on how can one deepen voice.
+3. Refer to the person reading the report as you
 Transcript: $transcript
+
 Pitch: ${pitch.toString()}
-Pace:  ${pace.toString()}
-Clarity:  ${clarity.toString()}
-Volume:  ${volume.toString()}
-Pronunciation Accuracy:  ${pronunciationAccuracy.toString()}
-Confidence:  ${confidence.toString()}
-Based on these values, please generate a detailed report on how I can deepen my voice. The report should analyze my current voice characteristics, highlight areas that contribute to a higher or weaker pitch, and provide practical recommendations for lowering my voice tone.
-Additionally, include actionable exercises (such as breathing techniques, resonance training, or articulation improvements) that would help me develop a deeper and more authoritative voice. If possible, explain how each factor (e.g., pitch, pace, clarity) influences voice depth and how I can improve them.
-                """;
+
+Pace: ${pace.toString()}
+
+Clarity: ${clarity.toString()}
+
+Volume: ${volume.toString()}
+
+Pronunciation Accuracy: ${pronunciationAccuracy.toString()}
+
+Confidence: ${confidence.toString()}
+
+This as an example
+### **Overview**  
+A deep, resonant voice often carries a sense of authority and confidence. The way we speak—our pitch, pacing, clarity, and even how we breathe—plays a crucial role in how our voice is perceived. Small adjustments in vocal technique can make a significant impact, enhancing both the richness and depth of one's tone. 
+
+### **Breaking Down the Decision**  
+For each aspect of my voice, analyse its role in shaping voice depth:  
+- **Pitch**: Does my pitch contribute to a higher or deeper tone?  
+- **Pace**: How does speaking speed affect the perception of depth?  
+- **Clarity**: Can improving articulation add more weight to my voice?  
+- **Volume**: Does my current volume help or hinder a strong presence?  
+- **Pronunciation Accuracy**: How does pronunciation impact depth and resonance?  
+- **Confidence**: Does vocal confidence enhance depth, or does it need adjustments?  
+
+### **Practical Recommendations**  
+Provide specific exercises to develop a deeper voice:  
+- **Breathing Techniques** (diaphragmatic breathing for better control).  
+- **Resonance Training** (humming and chest resonance exercises).  
+- **Pitch Control** (gliding from high to low to strengthen depth).  
+- **Pace Adjustment** (slowing down for a more grounded sound).  
+- **Pronunciation & Clarity** (tongue twisters for crisp articulation).  
+- **Volume Control** (projection exercises to enhance vocal presence).  
+
+### **Conclusion**  
+Summarize the key takeaways and provide actionable steps to help refine and develop a deeper, more authoritative voice over time.
+""";
 
     final response = await dio.post(
-      ' https://api.openai.com/v1/chat/completions',
+      'https://api.openai.com/v1/chat/completions',
       options: Options(
         headers: {
           'Authorization': 'Bearer $openaiApiKey',
