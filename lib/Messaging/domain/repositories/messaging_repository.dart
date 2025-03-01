@@ -5,6 +5,7 @@ import '../entities/model_message_entity.dart';
 
 abstract class MessagingRepository {
   Future<Either<Failure, void>> startRecording();
-  Future<Either<Failure,ModelMessageEntity>> stopRecording();
-  Future<Either<Failure,void>> getMicPermission();
+  Future<Either<Failure, ModelMessageEntity>> stopRecording();
+  Future<Either<Failure, void>> getMicPermission();
+  Future<Either<Failure, String>> generatePassage();
 }

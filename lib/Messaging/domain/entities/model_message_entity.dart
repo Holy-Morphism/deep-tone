@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 
 class ModelMessageEntity extends Equatable {
   final String report;
+  final String transcript;
   final double pitch;
   final double pace;
   final double clarity;
@@ -13,6 +14,7 @@ class ModelMessageEntity extends Equatable {
 
   // Constructor with calculated overall score
   ModelMessageEntity({
+    required this.transcript,
     required this.report,
     required this.pitch,
     required this.pace,
@@ -21,17 +23,18 @@ class ModelMessageEntity extends Equatable {
     required this.pronunciationAccuracy,
     required this.confidence,
   }) : overallScore = _calculateOverallScore(
-          pitch,
-          pace,
-          clarity,
-          volume,
-          pronunciationAccuracy,
-          confidence,
-        );
+         pitch,
+         pace,
+         clarity,
+         volume,
+         pronunciationAccuracy,
+         confidence,
+       );
 
   // Named constructor that allows explicitly setting the overall score
   const ModelMessageEntity.withOverallScore({
     required this.report,
+    required this.transcript,
     required this.pitch,
     required this.pace,
     required this.clarity,
@@ -61,6 +64,7 @@ class ModelMessageEntity extends Equatable {
   @override
   List<Object> get props {
     return [
+      transcript,
       report,
       pitch,
       pace,

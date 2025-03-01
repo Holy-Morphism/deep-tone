@@ -288,43 +288,39 @@ class DolbyService {
       if (!hasValidToken) {
         return Left(RecordingFailure('No valid token available'));
       }
+      final response = await dio.get(
+        'https://api.dolby.com/media/output',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $currentToken',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+        queryParameters: {
+          'url':
+              'dlb://out/${outputFilename.replaceAll('.wav', '-metadata.json')}',
+        },
+      );
 
-      try {
-        final response = await dio.get(
-          'https://api.dolby.com/media/output',
-          options: Options(
-            headers: {
-              'Authorization': 'Bearer $currentToken',
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-          ),
-          queryParameters: {'url': 'dlb://out/${outputFilename.replaceAll('.wav', '-metadata.json')}'},
-        );
-
-        if (response.statusCode != 200) {
-          print('Failed to get output: ${response.statusCode}');
-          return Left(RecordingFailure('Failed to get analysis output'));
-        }
-
-        // Parse the response data
-        if (response.data is String) {
-          try {
-            final decodedData = jsonDecode(response.data);
-            print('Successfully retrieved and parsed analysis output');
-            return Right(decodedData);
-          } catch (e) {
-            print('Error parsing JSON response: $e');
-            return Left(RecordingFailure('Failed to parse analysis output'));
-          }
-        }
-
-        print('Successfully retrieved analysis output');
-        return Right(response.data);
-      } catch (e) {
-        print('Error getting output: $e');
-        return Left(RecordingFailure('Failed to get analysis output: $e'));
+      if (response.statusCode != 200) {
+        print('Failed to get output: ${response.statusCode}');
+        return Left(RecordingFailure('Failed to get analysis output'));
       }
+
+      final Map<String, dynamic> decodedData = response.data;
+      final processedRegion = decodedData['processed_region'];
+      final speechDetails = processedRegion['audio']['speech']['details'][0];
+      final sections = speechDetails['sections'][0];
+
+      final result = {
+        'confidence': sections['confidence'],
+        'quality_score': sections['quality_score'],
+        'loudness': sections['loudness'],
+      };
+      print(result.toString());
+      print('Successfully extracted speech metrics');
+      return Right(result);
     } catch (e) {
       print('Error in getOutput: $e');
       return Left(RecordingFailure('Failed to get analysis output: $e'));

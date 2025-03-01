@@ -8,7 +8,7 @@ class ModelMessageModel extends ModelMessageEntity {
     required super.clarity,
     required super.volume,
     required super.pronunciationAccuracy,
-    required super.confidence,
+    required super.confidence, required super.transcript,
   });
   
 }

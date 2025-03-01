@@ -26,3 +26,7 @@ class RecordingFailure extends Failure {
 class MicError extends Failure {
   const MicError(super.message);
 }
+
+class APIFailure extends Failure {
+  const APIFailure(super.message);
+}

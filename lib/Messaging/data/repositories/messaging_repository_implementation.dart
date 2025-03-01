@@ -4,13 +4,16 @@ import 'package:deeptone/core/error/failure.dart';
 
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
+import 'package:fuzzywuzzy/fuzzywuzzy.dart';
 import 'package:record/record.dart';
 
 import '../../domain/repositories/messaging_repository.dart';
-import '../datasources/deepgram_service.dart';
-import '../datasources/dolby_service.dart';
-import '../datasources/pitch_service.dart';
-import '../services.dart/recording_service.dart';
+
+import '../services/deepgram_service.dart';
+import '../services/dolby_service.dart';
+import '../services/open_ai_service.dart';
+import '../services/pitch_service.dart';
+import '../services/recording_service.dart';
 
 class MessagingRepositoryImplementation implements MessagingRepository {
   final Dio dio;
@@ -23,6 +26,8 @@ class MessagingRepositoryImplementation implements MessagingRepository {
   late final PitchService _pitchService;
   late final DeepgramService _deepgramService;
   late final RecordingService _recordingService;
+  late final OpenAIService _openAIService;
+  late String _generatedPassage = "";
 
   MessagingRepositoryImplementation({
     required this.dio,
@@ -40,6 +45,7 @@ class MessagingRepositoryImplementation implements MessagingRepository {
     _deepgramService = DeepgramService(dio: dio, apiKey: deepGramApiKey);
     _pitchService = PitchService();
     _recordingService = RecordingService(audioRecorder: AudioRecorder());
+    _openAIService = OpenAIService(dio: dio, openaiApiKey: openaiApiKey);
   }
 
   @override
@@ -78,7 +84,6 @@ class MessagingRepositoryImplementation implements MessagingRepository {
             // 3. Start analysis
             await _dolbyService.analyzeSpeech(filename);
             final analysisResult = await _dolbyService.getOutput(filename);
-
             return analysisResult;
           });
         },
@@ -102,38 +107,72 @@ class MessagingRepositoryImplementation implements MessagingRepository {
       final deepgramResult = results[1];
       final pitchResult = results[2];
 
-      print("Dolby result ${dolbyResult}");
-      print("deep gram result :${deepgramResult}");
-      print("pitch result :${pitchResult}");
+      print(dolbyResult.toString());
+
+      // Default values in case any API call fails
+      double confidenceScore = 0.0;
+      double volumeScore = 0.0;
+      double clarityScore = 0.0;
+      double paceScore = 0.0;
+      double pitchScore = 0.0;
+      double pronunciationAccuracyScore = 0.0;
+      String transcript = "";
 
       if (dolbyResult is Right) {
         final Map<String, dynamic> data = dolbyResult.value;
+        confidenceScore = data['confidence'] ?? 0;
+        clarityScore = data['quality_score'] ?? 0;
+        volumeScore = data['loudness'] ?? 0;
 
-        double confidence =
-            data['processed_region']['audio']['speech']['details'][0]['sections'][0]['confidence'];
-        double qualityScore =
-            data['processed_region']['audio']['speech']['details'][0]['quality_score'];
-        double loudness =
-            data['processed_region']['audio']['speech']['details'][0]['loudness']['measured'];
-        print(confidence);
-        print(qualityScore);
-        print(loudness);
+        print("Confidence score: $confidenceScore");
+        print("Clarity score: $clarityScore");
+        print("Volume score: $volumeScore");
       }
 
+      if (deepgramResult is Right) {
+        final Map<String, dynamic> data = deepgramResult.value;
+        transcript = data['transcript'] ?? "";
+        paceScore = data['wordsPerMinute'] ?? 0;
+      }
+      print("Transcript: $transcript");
+      print("Pace score: $paceScore");
+      if (pitchResult is Right) {
+        pitchScore = pitchResult.value ?? 0;
+      }
+      print("Pitch Score: ${pitchScore}");
       // Clean up temporary file
+
+      if (_generatedPassage.isNotEmpty) {
+        pronunciationAccuracyScore =
+            ratio(_generatedPassage, transcript).toDouble();
+      }
+
       await file.delete();
 
-      return Right(
-        ModelMessageEntity(
-          report: "report",
-          pitch: 0,
-          pace: 0,
-          clarity: 0,
-          volume: 0,
-          pronunciationAccuracy: 0,
-          confidence: 0,
-        ),
+      final String report = await _openAIService.generateReport(
+        transcript: transcript,
+        pitch: pitchScore,
+        pace: paceScore,
+        clarity: clarityScore,
+        volume: volumeScore,
+        pronunciationAccuracy: pronunciationAccuracyScore,
+        confidence: confidenceScore,
       );
+
+      final resultModelMessageEntity = ModelMessageEntity(
+        report: report,
+        pitch: pitchScore,
+        pace: paceScore,
+        clarity: clarityScore,
+        volume: volumeScore,
+        pronunciationAccuracy: pronunciationAccuracyScore,
+        confidence: confidenceScore,
+        transcript: transcript,
+      );
+
+      print(resultModelMessageEntity);
+
+      return Right(resultModelMessageEntity);
     } catch (e) {
       return Left(
         RecordingFailure('Recording process failed: ${e.toString()}'),
@@ -150,6 +189,16 @@ class MessagingRepositoryImplementation implements MessagingRepository {
       return Left(MicError('Enable to Retreive mic'));
     } catch (e) {
       return Left(RecordingFailure('Retreiving Mic Erros'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> generatePassage() async {
+    try {
+      _generatedPassage = await _openAIService.generatePassage();
+      return Right(_generatedPassage);
+    } catch (e) {
+      return Left(APIFailure("Error Genrating Passage ${e.toString()}"));
     }
   }
 }

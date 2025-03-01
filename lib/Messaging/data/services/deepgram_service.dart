@@ -144,33 +144,27 @@ class DeepgramService {
               : 0;
               
           // Count filler words
-          final fillerWordPatterns = [
-            RegExp(r'\bum\b', caseSensitive: false),
-            RegExp(r'\buh\b', caseSensitive: false),
-            RegExp(r'\blike\b', caseSensitive: false),
-            RegExp(r'\byou know\b', caseSensitive: false),
-            RegExp(r'\bactually\b', caseSensitive: false),
-            RegExp(r'\bbasically\b', caseSensitive: false),
-          ];
+          // final fillerWordPatterns = [
+          //   RegExp(r'\bum\b', caseSensitive: false),
+          //   RegExp(r'\buh\b', caseSensitive: false),
+          //   RegExp(r'\blike\b', caseSensitive: false),
+          //   RegExp(r'\byou know\b', caseSensitive: false),
+          //   RegExp(r'\bactually\b', caseSensitive: false),
+          //   RegExp(r'\bbasically\b', caseSensitive: false),
+          // ];
           
-          int fillerWordCount = 0;
-          for (var pattern in fillerWordPatterns) {
-            fillerWordCount += pattern.allMatches(transcript).length;
-          }
+          // int fillerWordCount = 0;
+          // for (var pattern in fillerWordPatterns) {
+          //   fillerWordCount += pattern.allMatches(transcript).length;
+          // }
           
           // Metrics to return
           return Right({
             'transcript': transcript,
-            'confidence': extractConfidence(response),
+           // 'confidence': extractConfidence(response),
             'words': words,
-            'metrics': {
-              'wordsPerMinute': wordsPerMinute,
-              'totalWords': words.length,
-              'fillerWords': fillerWordCount,
-              'fillerWordRatio': words.isEmpty ? 0 : fillerWordCount / words.length,
-              'duration': words.isEmpty ? 0 : words.last['endTime'],
-            },
-            'rawResponse': response,
+            'wordsPerMinute': wordsPerMinute,
+            
           });
         } catch (e) {
           return Left(RecordingFailure('Failed to analyze audio: ${e.toString()}'));
