@@ -9,6 +9,10 @@ sealed class MessagingEvent extends Equatable {
 
 class GetMicPermissionEvent extends MessagingEvent {}
 
+class GeneratePassageEvent extends MessagingEvent{
+  
+}
+
 class StartRecordingEvent extends MessagingEvent {}
 
 class StopRecordingEvent extends MessagingEvent {}

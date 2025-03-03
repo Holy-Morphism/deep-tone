@@ -11,6 +11,7 @@ final class MessagingBlocInitial extends MessagingState {
   // Get previous chat
 }
 
+// Related To Mic
 final class GettingMicPermissionState extends MessagingState {
   // Waiting for mic permission
 }
@@ -22,9 +23,38 @@ final class MicPermissionDeniedState extends MessagingState {
 
 final class MicPermissionSuccessState extends MessagingState {}
 
-final class MessagingLoadingState extends MessagingState {}
+//reading Passage
+final class GeneratingPassageState extends MessagingState {}
 
+final class ReadingPassageState extends MessagingState {
+  final String passage;
+  const ReadingPassageState(this.passage);
+}
+
+// Analysis
 final class RecordingState extends MessagingState {}
+
+final class AnalysisState extends MessagingState {}
+
+final class GeneratingReportState extends MessagingState {
+  final double pitch;
+  final double pace;
+  final double clarity;
+  final double volume;
+  final double pronunciationAccuracy;
+  final double confidence;
+  final double overallScore;
+
+  const GeneratingReportState(
+    this.pitch,
+    this.pace,
+    this.clarity,
+    this.volume,
+    this.pronunciationAccuracy,
+    this.confidence,
+    this.overallScore,
+  );
+}
 
 final class MessageSuccesState extends MessagingState {
   final ModelMessageEntity modelMessageEntity;
