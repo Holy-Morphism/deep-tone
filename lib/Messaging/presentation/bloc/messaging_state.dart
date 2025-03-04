@@ -43,22 +43,24 @@ final class GeneratingReportState extends MessagingState {
   final double volume;
   final double pronunciationAccuracy;
   final double confidence;
+  final String transcript;
   final double overallScore;
 
-  const GeneratingReportState(
-    this.pitch,
-    this.pace,
-    this.clarity,
-    this.volume,
-    this.pronunciationAccuracy,
-    this.confidence,
-    this.overallScore,
-  );
+  const GeneratingReportState({
+    required this.pitch,
+    required this.pace,
+    required this.clarity,
+    required this.volume,
+    required this.pronunciationAccuracy,
+    required this.confidence,
+    required this.overallScore,
+    required this.transcript,
+  });
 }
 
 final class MessageSuccesState extends MessagingState {
-  final ModelMessageEntity modelMessageEntity;
-  const MessageSuccesState({required this.modelMessageEntity});
+  final MessageEntity message;
+  const MessageSuccesState({required this.message});
 }
 
 final class MessagingErrorState extends MessagingState {

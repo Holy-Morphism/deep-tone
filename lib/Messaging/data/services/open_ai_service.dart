@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 
+import '../../domain/entities/speech_analysis_metrics_entity.dart';
+
 class OpenAIService {
   final Dio dio;
   final String openaiApiKey;
@@ -44,32 +46,26 @@ class OpenAIService {
     return content;
   }
 
-  Future<String> generateReport({
-    required String transcript,
-    required double pitch,
-    required double pace,
-    required double clarity,
-    required double volume,
-    required double pronunciationAccuracy,
-    required double confidence,
-  }) async {
+  Future<String> generateReport(
+    SpeechAnalysisMetricsEntity speechAnalysisMetricsModel,
+  ) async {
     final String prompt = """
 1. These parameters have been collected be a audio analysis system.
 2. Based on these values, please generate a detailed report on how can one deepen voice.
 3. Refer to the person reading the report as you
-Transcript: $transcript
+Transcript: ${speechAnalysisMetricsModel.transcript}
 
-Pitch: ${pitch.toString()}
+Pitch: ${speechAnalysisMetricsModel.pitch.toString()}
 
-Pace: ${pace.toString()}
+Pace: ${speechAnalysisMetricsModel.pace.toString()}
 
-Clarity: ${clarity.toString()}
+Clarity: ${speechAnalysisMetricsModel.clarity.toString()}
 
-Volume: ${volume.toString()}
+Volume: ${speechAnalysisMetricsModel.volume.toString()}
 
-Pronunciation Accuracy: ${pronunciationAccuracy.toString()}
+Pronunciation Accuracy: ${speechAnalysisMetricsModel.pronunciationAccuracy.toString()}
 
-Confidence: ${confidence.toString()}
+Confidence: ${speechAnalysisMetricsModel.confidence.toString()}
 
 This as an example
 ### **Overview**  

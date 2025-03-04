@@ -1,5 +1,3 @@
-import 'package:deeptone/Messaging/domain/entities/model_message_entity.dart';
-
 import 'package:deeptone/core/error/failure.dart';
 
 import 'package:dartz/dartz.dart';
@@ -9,6 +7,8 @@ import 'package:record/record.dart';
 
 import '../../domain/repositories/messaging_repository.dart';
 
+import '../models/message_model.dart';
+import '../models/speech_analysis_metrics_model.dart';
 import '../services/deepgram_service.dart';
 import '../services/dolby_service.dart';
 import '../services/open_ai_service.dart';
@@ -28,6 +28,8 @@ class MessagingRepositoryImplementation implements MessagingRepository {
   late final RecordingService _recordingService;
   late final OpenAIService _openAIService;
   late String _generatedPassage = "";
+  late SpeechAnalysisMetricsModel _speechAnalysisMetricsModel;
+  late String _report;
 
   MessagingRepositoryImplementation({
     required this.dio,
@@ -54,7 +56,7 @@ class MessagingRepositoryImplementation implements MessagingRepository {
   }
 
   @override
-  Future<Either<Failure, ModelMessageEntity>> stopRecording() async {
+  Future<Either<Failure, SpeechAnalysisMetricsModel>> stopRecording() async {
     try {
       final result = await _recordingService.stopRecording();
       if (result.isLeft()) {
@@ -151,20 +153,7 @@ class MessagingRepositoryImplementation implements MessagingRepository {
 
       await file.delete();
 
-      final String report = await _openAIService.generateReport(
-        transcript: transcript,
-        pitch: pitchScore,
-        pace: paceScore,
-        clarity: clarityScore,
-        volume: volumeScore,
-        pronunciationAccuracy: pronunciationAccuracyScore,
-        confidence: confidenceScore,
-      );
-
-      print("Report : $report");
-
-      final resultModelMessageEntity = ModelMessageEntity(
-        report: report,
+      _speechAnalysisMetricsModel = SpeechAnalysisMetricsModel(
         pitch: pitchScore,
         pace: paceScore,
         clarity: clarityScore,
@@ -174,9 +163,9 @@ class MessagingRepositoryImplementation implements MessagingRepository {
         transcript: transcript,
       );
 
-      print(resultModelMessageEntity);
+      print(_speechAnalysisMetricsModel);
 
-      return Right(resultModelMessageEntity);
+      return Right(_speechAnalysisMetricsModel);
     } catch (e) {
       print(e.toString());
       return Left(
@@ -204,6 +193,26 @@ class MessagingRepositoryImplementation implements MessagingRepository {
       return Right(_generatedPassage);
     } catch (e) {
       return Left(APIFailure("Error Genrating Passage ${e.toString()}"));
+    }
+  }
+
+  @override
+  Future<Either<Failure, MessageModel>> generateReport() async {
+    try {
+      _report = await _openAIService.generateReport(
+        _speechAnalysisMetricsModel,
+      );
+
+      final message = MessageModel(
+        dateTime: DateTime.now(),
+        passage: _generatedPassage,
+        report: _report,
+        speechAnalysisMetrics: _speechAnalysisMetricsModel,
+      );
+
+      return Right(message);
+    } catch (e) {
+      return Left(RecordingFailure("Error while generating prompt $_report"));
     }
   }
 }
