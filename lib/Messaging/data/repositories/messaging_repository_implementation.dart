@@ -1,3 +1,4 @@
+import 'package:deeptone/Messaging/domain/entities/message_entity.dart';
 import 'package:deeptone/core/error/failure.dart';
 
 import 'package:dartz/dartz.dart';
@@ -214,5 +215,42 @@ class MessagingRepositoryImplementation implements MessagingRepository {
     } catch (e) {
       return Left(RecordingFailure("Error while generating prompt $_report"));
     }
+  }
+
+  @override
+  Future<Either<Failure, List<MessageEntity>>> getMessages() {
+    // Return a dummy list of messages for testing
+    return Future.value(
+      Right([
+        MessageModel(
+          dateTime: DateTime.now().subtract(const Duration(days: 1)),
+          passage: "Sample passage 1",
+          report: "Sample report 1",
+          speechAnalysisMetrics: SpeechAnalysisMetricsModel(
+            transcript: "Sample transcript 1",
+            pitch: 0.8,
+            pace: 0.7,
+            clarity: 0.9,
+            volume: 0.75,
+            pronunciationAccuracy: 0.85,
+            confidence: 0.9,
+          ),
+        ),
+        MessageModel(
+          dateTime: DateTime.now(),
+          passage: "Sample passage 2",
+          report: "Sample report 2",
+          speechAnalysisMetrics: SpeechAnalysisMetricsModel(
+            transcript: "Sample transcript 2",
+            pitch: 0.7,
+            pace: 0.8,
+            clarity: 0.85,
+            volume: 0.8,
+            pronunciationAccuracy: 0.9,
+            confidence: 0.85,
+          ),
+        ),
+      ]),
+    );
   }
 }

@@ -10,4 +10,5 @@ abstract class MessagingRepository {
   Future<Either<Failure, MessageEntity>> generateReport();
   Future<Either<Failure, String>> generatePassage();
   Future<Either<Failure, void>> getMicPermission();
+  Future<Either<Failure,List<MessageEntity>>> getMessages();
 }

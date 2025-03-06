@@ -7,9 +7,7 @@ sealed class MessagingState extends Equatable {
   List<Object> get props => [];
 }
 
-final class MessagingBlocInitial extends MessagingState {
-  // Get previous chat
-}
+final class MessagingBlocInitial extends MessagingState {}
 
 // Related To Mic
 final class GettingMicPermissionState extends MessagingState {
@@ -27,8 +25,8 @@ final class MicPermissionSuccessState extends MessagingState {}
 final class GeneratingPassageState extends MessagingState {}
 
 final class ReadingPassageState extends MessagingState {
-  final String passage;
-  const ReadingPassageState(this.passage);
+  final List<MessageEntity> messages;
+  const ReadingPassageState(this.messages);
 }
 
 // Analysis
@@ -37,30 +35,13 @@ final class RecordingState extends MessagingState {}
 final class AnalysisState extends MessagingState {}
 
 final class GeneratingReportState extends MessagingState {
-  final double pitch;
-  final double pace;
-  final double clarity;
-  final double volume;
-  final double pronunciationAccuracy;
-  final double confidence;
-  final String transcript;
-  final double overallScore;
-
-  const GeneratingReportState({
-    required this.pitch,
-    required this.pace,
-    required this.clarity,
-    required this.volume,
-    required this.pronunciationAccuracy,
-    required this.confidence,
-    required this.overallScore,
-    required this.transcript,
-  });
+  final List<MessageEntity> messages;
+  const GeneratingReportState({required this.messages});
 }
 
 final class MessageSuccesState extends MessagingState {
-  final MessageEntity message;
-  const MessageSuccesState({required this.message});
+  final List<MessageEntity> messages;
+  const MessageSuccesState({required this.messages});
 }
 
 final class MessagingErrorState extends MessagingState {

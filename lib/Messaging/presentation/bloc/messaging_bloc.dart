@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/error/failure.dart';
 import '../../domain/entities/message_entity.dart';
+import '../../domain/entities/speech_analysis_metrics_entity.dart';
 import '../../domain/usecases/generate_passage.dart';
 import '../../domain/usecases/generate_report.dart';
 import '../../domain/usecases/get_mic_permission.dart';
@@ -17,6 +18,9 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
   final GetMicPermission getMicPermission;
   final GeneratePassage generatePassage;
   final GenerateReport generateReport;
+  String? passage;
+  SpeechAnalysisMetricsEntity? speechAnalysisMetricsEntity;
+  List<MessageEntity> messages = [];
 
   MessagingBloc({
     required this.startRecording,
@@ -41,10 +45,13 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
     on<GeneratePassageEvent>((event, emit) async {
       emit(GeneratingPassageState());
       final result = await generatePassage();
-      result.fold(
-        (failure) => emit(MessagingErrorState(failure.message)),
-        (succes) => emit(ReadingPassageState(succes)),
-      );
+      result.fold((failure) => emit(MessagingErrorState(failure.message)), (
+        succes,
+      ) {
+        messages.add(MessageEntity(dateTime: DateTime.now(), passage: succes));
+        passage = succes;
+        emit(ReadingPassageState(messages));
+      });
     });
 
     on<StartRecordingEvent>((event, emit) async {
@@ -59,26 +66,28 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
     on<StopRecordingEvent>((event, emit) async {
       emit(AnalysisState());
       final metrics = await stopRecording();
-      metrics.fold(
-        (failure) => emit(MessagingErrorState(failure.message)),
-        (success) => emit(
-          GeneratingReportState(
-            pitch: success.pitch,
-            pace: success.pace,
-            clarity: success.clarity,
-            volume: success.volume,
-            pronunciationAccuracy: success.pronunciationAccuracy,
-            confidence: success.confidence,
-            overallScore: success.overallScore,
-            transcript: success.transcript,
+      metrics.fold((failure) => emit(MessagingErrorState(failure.message)), (
+        success,
+      ) {
+        messages.removeLast();
+        messages.add(
+          MessageEntity(
+            dateTime: DateTime.now(),
+            passage: passage!,
+            speechAnalysisMetrics: success,
           ),
-        ),
-      );
+        );
+        speechAnalysisMetricsEntity = success;
+        emit(GeneratingReportState(messages: messages));
+      });
       final result = await generateReport();
-      result.fold(
-        (failure) => emit(MessagingErrorState(failure.message)),
-        (success) => emit(MessageSuccesState(message:  success)),
-      );
+      result.fold((failure) => emit(MessagingErrorState(failure.message)), (
+        success,
+      ) {
+        messages.removeLast();
+        messages.add(success);
+        emit(MessageSuccesState(messages: messages));
+      });
     });
   }
 }

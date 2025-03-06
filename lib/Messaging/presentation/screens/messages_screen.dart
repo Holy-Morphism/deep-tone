@@ -3,8 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../shared/drawer.dart';
 import '../bloc/messaging_bloc.dart';
-import '../widgets/model_message.dart';
-import '../widgets/response_loading.dart';
 
 class MessagingScreen extends StatefulWidget {
   const MessagingScreen({super.key});
@@ -22,12 +20,15 @@ class _MessagingScreenState extends State<MessagingScreen> {
   @override
   Widget build(BuildContext context) {
     void startRecording() {
-      print('Recodding tarted in screen');
+      print('Recording started in screen');
       BlocProvider.of<MessagingBloc>(context).add(StartRecordingEvent());
     }
 
     void stopRecording() =>
         BlocProvider.of<MessagingBloc>(context).add(StopRecordingEvent());
+
+    void generatePassage() =>
+        BlocProvider.of<MessagingBloc>(context).add(GeneratePassageEvent());
 
     return BlocConsumer<MessagingBloc, MessagingState>(
       listener: (context, state) {
@@ -50,29 +51,26 @@ class _MessagingScreenState extends State<MessagingScreen> {
                     onPressed:
                         state is RecordingState
                             ? stopRecording
-                            : startRecording,
+                            : state is ReadingPassageState
+                            ? startRecording
+                            : generatePassage,
                     backgroundColor:
-                        state is RecordingState ? Colors.red : Colors.blue,
-                    child: Icon(
-                      state is RecordingState ? Icons.stop : Icons.mic,
-                    ),
+                        state is RecordingState
+                            ? Colors.red
+                            : state is ReadingPassageState
+                            ? Colors.blue
+                            : Colors.green,
+                    child:
+                        state is ReadingPassageState
+                            ? Icon(
+                              state is RecordingState ? Icons.stop : Icons.mic,
+                            )
+                            : Text(
+                              "Generate Passage",
+                              style: TextStyle(color: Colors.white),
+                            ),
                   ),
-          body: SafeArea(
-            child:
-                state is GettingMicPermissionState
-                    ? Center(child: Text('Getting Mic permission'))
-                    : state is MessageSuccesState
-                    ? SingleChildScrollView(
-                      child: ModelMessage(
-                        modelMessageEntity: state.modelMessageEntity,
-                      ),
-                    )
-                    : state is MessagingLoadingState
-                    ? ResponseLoading()
-                    : Center(
-                      child: Text("Press the mic button to start recording"),
-                    ),
-          ),
+          body: SafeArea(child: Center(child: Text("Welcome Back !"))),
         );
       },
     );
