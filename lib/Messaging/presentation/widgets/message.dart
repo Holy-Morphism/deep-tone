@@ -23,61 +23,139 @@ class Message extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(passage),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               const CircleAvatar(child: Text('🤖')),
               const SizedBox(width: 8.0),
-              Text(passage, style: GoogleFonts.poppins()),
+              Expanded(child: Text(passage, style: GoogleFonts.poppins())),
             ],
           ),
           if (speechAnalysisMetricsEntity != null) ...[
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
+              
               children: [
-                Text(
-                  "Pitch: ${speechAnalysisMetricsEntity?.pitch}",
-                  style: GoogleFonts.poppins(),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: "Pitch: ",
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                      ),
+                      TextSpan(
+                        text:
+                            "${speechAnalysisMetricsEntity?.pitch.toStringAsFixed(2)}",
+                        style: GoogleFonts.poppins(),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(width: 8.0),
-                Text(
-                  "Pace: ${speechAnalysisMetricsEntity?.pace}",
-                  style: GoogleFonts.poppins(),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: "Pace: ",
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                      ),
+                      TextSpan(
+                        text:
+                            "${speechAnalysisMetricsEntity?.pace.toStringAsFixed(2)}",
+                        style: GoogleFonts.poppins(),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Clarity: ${speechAnalysisMetricsEntity?.clarity}",
-                  style: GoogleFonts.poppins(),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: "Clarity: ",
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                      ),
+                      TextSpan(
+                        text:
+                            "${speechAnalysisMetricsEntity?.clarity.toStringAsFixed(2)}",
+                        style: GoogleFonts.poppins(),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(width: 8.0),
-                Text(
-                  "Volume: ${speechAnalysisMetricsEntity?.volume}",
-                  style: GoogleFonts.poppins(),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: "Volume: ",
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                      ),
+                      TextSpan(
+                        text:
+                            "${speechAnalysisMetricsEntity?.volume.toStringAsFixed(2)}",
+                        style: GoogleFonts.poppins(),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Pronunciation: ${speechAnalysisMetricsEntity?.pronunciationAccuracy}",
-                  style: GoogleFonts.poppins(),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: "Pronunciation: ",
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                      ),
+                      TextSpan(
+                        text:
+                            "${speechAnalysisMetricsEntity?.pronunciationAccuracy.toStringAsFixed(2)}",
+                        style: GoogleFonts.poppins(),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(width: 8.0),
-                Text(
-                  "Confidence: ${speechAnalysisMetricsEntity?.confidence}",
-                  style: GoogleFonts.poppins(),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: "Confidence: ",
+                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                      ),
+                      TextSpan(
+                        text:
+                            "${speechAnalysisMetricsEntity?.confidence.toStringAsFixed(2)}",
+                        style: GoogleFonts.poppins(),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-            Text(
-              "Overall: ${speechAnalysisMetricsEntity?.overallScore}",
-              style: GoogleFonts.poppins(),
+            Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: "Overall: ",
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                  ),
+                  TextSpan(
+                    text:
+                        "${speechAnalysisMetricsEntity?.overallScore.toStringAsFixed(2)}",
+                    style: GoogleFonts.poppins(),
+                  ),
+                ],
+              ),
             ),
           ],
 

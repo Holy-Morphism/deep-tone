@@ -10,6 +10,7 @@ class MessageEntity extends Equatable {
   final SpeechAnalysisMetricsEntity? speechAnalysisMetrics;
 
   const MessageEntity({
+    
     required this.dateTime,
     required this.passage,
     this.report,

@@ -31,7 +31,7 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
   }) : super(MessagingBlocInitial()) {
     // Get Mic permission
     on<GetMicPermissionEvent>((event, emit) async {
-      emit(GettingMicPermissionState());
+      emit(MicPermissionDeniedState("Mic permission currently"));
       final result = await getMicPermission();
       result.fold((failure) {
         if (failure is MicError) {
@@ -39,7 +39,14 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
         } else if (failure is RecordingFailure) {
           emit(MessagingErrorState(failure.message));
         }
-      }, (success) => emit(MicPermissionSuccessState()));
+      }, (success) => emit(MessageSuccesState(messages: [])));
+    });
+
+    // Load existing messages when app starts
+    on<LoadMessagesEvent>((event, emit) async {
+      // This would typically load messages from a repository or database
+      // For now, we'll just display the current messages list
+      emit(MessageSuccesState(messages: messages));
     });
 
     on<GeneratePassageEvent>((event, emit) async {
@@ -48,18 +55,20 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
       result.fold((failure) => emit(MessagingErrorState(failure.message)), (
         succes,
       ) {
-        messages.add(MessageEntity(dateTime: DateTime.now(), passage: succes));
+        messages.add(
+          MessageEntity(dateTime: DateTime.now(), passage: succes),
+        );
         passage = succes;
-        emit(ReadingPassageState(messages));
+        emit(ReadingPassageState(messages: messages));
       });
     });
 
     on<StartRecordingEvent>((event, emit) async {
-      emit(RecordingState());
+      emit(RecordingState(messages));
       final result = await startRecording();
       result.fold(
         (failure) => emit(MessagingErrorState(failure.message)),
-        (succes) => emit(RecordingState()),
+        (success) => emit(RecordingState(messages)),
       );
     });
 
@@ -78,7 +87,7 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
           ),
         );
         speechAnalysisMetricsEntity = success;
-        emit(GeneratingReportState(messages: messages));
+        emit(GeneratingReportState());
       });
       final result = await generateReport();
       result.fold((failure) => emit(MessagingErrorState(failure.message)), (

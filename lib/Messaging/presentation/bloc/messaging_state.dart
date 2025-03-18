@@ -9,35 +9,30 @@ sealed class MessagingState extends Equatable {
 
 final class MessagingBlocInitial extends MessagingState {}
 
-// Related To Mic
-final class GettingMicPermissionState extends MessagingState {
-  // Waiting for mic permission
-}
-
 final class MicPermissionDeniedState extends MessagingState {
   final String message;
   const MicPermissionDeniedState(this.message);
 }
-
-final class MicPermissionSuccessState extends MessagingState {}
 
 //reading Passage
 final class GeneratingPassageState extends MessagingState {}
 
 final class ReadingPassageState extends MessagingState {
   final List<MessageEntity> messages;
-  const ReadingPassageState(this.messages);
+
+  const ReadingPassageState({required this.messages});
 }
 
 // Analysis
-final class RecordingState extends MessagingState {}
+final class RecordingState extends MessagingState {
+  final List<MessageEntity> messages;
+
+  const RecordingState(this.messages);
+}
 
 final class AnalysisState extends MessagingState {}
 
-final class GeneratingReportState extends MessagingState {
-  final List<MessageEntity> messages;
-  const GeneratingReportState({required this.messages});
-}
+final class GeneratingReportState extends MessagingState {}
 
 final class MessageSuccesState extends MessagingState {
   final List<MessageEntity> messages;
