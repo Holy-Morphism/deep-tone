@@ -35,7 +35,9 @@ final router = GoRouter(
           (context, state) => BlocProvider(
             create:
                 (context) =>
-                    locator<MessagingBloc>()..add(GetMicPermissionEvent()),
+                    locator<MessagingBloc>()
+                      ..add(GetMicPermissionEvent())
+                      ..add(LoadMessagesEvent()),
             child: const MessagingScreen(),
           ),
     ),

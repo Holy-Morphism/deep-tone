@@ -1,37 +1,53 @@
 part of 'messaging_bloc.dart';
 
 sealed class MessagingState extends Equatable {
-  const MessagingState();
+  final List<MessageEntity> messages;
+  const MessagingState(this.messages);
 
   @override
-  List<Object> get props => [];
+  List<Object> get props => [messages];
 }
 
 final class MessagingBlocInitial extends MessagingState {
-  // Get previous chat
-}
-
-final class GettingMicPermissionState extends MessagingState {
-  // Waiting for mic permission
+  const MessagingBlocInitial() : super(const []);
 }
 
 final class MicPermissionDeniedState extends MessagingState {
   final String message;
-  const MicPermissionDeniedState(this.message);
+  const MicPermissionDeniedState(this.message) : super(const []);
 }
 
-final class MicPermissionSuccessState extends MessagingState {}
+final class LoadingMessagesState extends MessagingState {
+  const LoadingMessagesState() : super(const []);
+}
 
-final class MessagingLoadingState extends MessagingState {}
+//reading Passage
+final class GeneratingPassageState extends MessagingState {
+  const GeneratingPassageState(super.messages);
+}
 
-final class RecordingState extends MessagingState {}
+final class ReadingPassageState extends MessagingState {
+  const ReadingPassageState(super.messages);
+}
+
+// Analysis
+final class RecordingState extends MessagingState {
+  const RecordingState(super.messages);
+}
+
+final class AnalysisState extends MessagingState {
+  const AnalysisState(super.messages);
+}
+
+final class GeneratingReportState extends MessagingState {
+  const GeneratingReportState(super.messages);
+}
 
 final class MessageSuccesState extends MessagingState {
-  final ModelMessageEntity modelMessageEntity;
-  const MessageSuccesState({required this.modelMessageEntity});
+  const MessageSuccesState(super.messages);
 }
 
 final class MessagingErrorState extends MessagingState {
   final String message;
-  const MessagingErrorState(this.message);
+  const MessagingErrorState(this.message) : super(const []);
 }

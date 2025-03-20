@@ -1,14 +1,17 @@
-import 'package:deeptone/Messaging/domain/entities/model_message_entity.dart';
-
+import 'package:deeptone/Messaging/domain/entities/message_entity.dart';
 import 'package:deeptone/core/error/failure.dart';
 
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:fuzzywuzzy/fuzzywuzzy.dart';
 import 'package:record/record.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../injection_container.dart';
 import '../../domain/repositories/messaging_repository.dart';
 
+import '../models/message_model.dart';
+import '../models/speech_analysis_metrics_model.dart';
 import '../services/deepgram_service.dart';
 import '../services/dolby_service.dart';
 import '../services/open_ai_service.dart';
@@ -28,6 +31,8 @@ class MessagingRepositoryImplementation implements MessagingRepository {
   late final RecordingService _recordingService;
   late final OpenAIService _openAIService;
   late String _generatedPassage = "";
+  late SpeechAnalysisMetricsModel _speechAnalysisMetricsModel;
+  late String _report;
 
   MessagingRepositoryImplementation({
     required this.dio,
@@ -54,7 +59,7 @@ class MessagingRepositoryImplementation implements MessagingRepository {
   }
 
   @override
-  Future<Either<Failure, ModelMessageEntity>> stopRecording() async {
+  Future<Either<Failure, SpeechAnalysisMetricsModel>> stopRecording() async {
     try {
       final result = await _recordingService.stopRecording();
       if (result.isLeft()) {
@@ -139,7 +144,7 @@ class MessagingRepositoryImplementation implements MessagingRepository {
       if (pitchResult is Right) {
         pitchScore = pitchResult.value ?? 0.0;
       }
-      print("Pitch Score: ${pitchScore}");
+      print("Pitch Score: $pitchScore");
       // Clean up temporary file
 
       if (_generatedPassage.isNotEmpty) {
@@ -151,20 +156,7 @@ class MessagingRepositoryImplementation implements MessagingRepository {
 
       await file.delete();
 
-      final String report = await _openAIService.generateReport(
-        transcript: transcript,
-        pitch: pitchScore,
-        pace: paceScore,
-        clarity: clarityScore,
-        volume: volumeScore,
-        pronunciationAccuracy: pronunciationAccuracyScore,
-        confidence: confidenceScore,
-      );
-
-      print("Report : $report");
-
-      final resultModelMessageEntity = ModelMessageEntity(
-        report: report,
+      _speechAnalysisMetricsModel = SpeechAnalysisMetricsModel(
         pitch: pitchScore,
         pace: paceScore,
         clarity: clarityScore,
@@ -174,9 +166,9 @@ class MessagingRepositoryImplementation implements MessagingRepository {
         transcript: transcript,
       );
 
-      print(resultModelMessageEntity);
+      print(_speechAnalysisMetricsModel);
 
-      return Right(resultModelMessageEntity);
+      return Right(_speechAnalysisMetricsModel);
     } catch (e) {
       print(e.toString());
       return Left(
@@ -204,6 +196,116 @@ class MessagingRepositoryImplementation implements MessagingRepository {
       return Right(_generatedPassage);
     } catch (e) {
       return Left(APIFailure("Error Genrating Passage ${e.toString()}"));
+    }
+  }
+
+  @override
+  Future<Either<Failure, MessageModel>> generateReport() async {
+    try {
+      _report = await _openAIService.generateReport(
+        _speechAnalysisMetricsModel,
+      );
+
+      final message = MessageModel(
+        dateTime: DateTime.now(),
+        passage: _generatedPassage,
+        report: _report,
+        speechAnalysisMetrics: _speechAnalysisMetricsModel,
+      );
+
+      final result = await _postMessage(message);
+
+      result.fold(
+        (l) {
+          print(l.message);
+        },
+        (r) {
+          print("Success full posted message");
+        },
+      );
+
+      return Right(message);
+    } catch (e) {
+      return Left(RecordingFailure("Error while generating prompt $_report"));
+    }
+  }
+
+  Future<Either<Failure, void>> _postMessage(MessageEntity message) async {
+    try {
+      final currentUser = locator<SupabaseClient>().auth.currentUser;
+
+      await locator<SupabaseClient>().from('messages').insert({
+        'user_id': currentUser!.id,
+        'created_at': message.dateTime.toIso8601String(),
+        'passage': message.passage,
+        'report': message.report,
+        'transcript': message.speechAnalysisMetrics!.transcript,
+        'pitch': message.speechAnalysisMetrics!.pitch,
+        'pace': message.speechAnalysisMetrics!.pace,
+        'clarity': message.speechAnalysisMetrics!.clarity,
+        'volume': message.speechAnalysisMetrics!.volume,
+        'pronunciation': message.speechAnalysisMetrics!.pronunciationAccuracy,
+        'confidence': message.speechAnalysisMetrics!.confidence,
+        'overall_score': message.speechAnalysisMetrics!.overallScore,
+      });
+
+      return const Right(null);
+    } catch (e) {
+      return Left(RecordingFailure('Failed to save message: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<MessageEntity>>> getMessages() async {
+    //Return a dummy list of messages for testing
+    // return Future.value(
+    //   Right([
+    //     MessageModel(
+    //       dateTime: DateTime.now().subtract(const Duration(days: 1)),
+    //       passage: "Sample passage 1",
+    //       report: "Sample report 1",
+    //       speechAnalysisMetrics: SpeechAnalysisMetricsModel(
+    //         transcript: "Sample transcript 1",
+    //         pitch: 0.8,
+    //         pace: 0.7,
+    //         clarity: 0.9,
+    //         volume: 0.75,
+    //         pronunciationAccuracy: 0.85,
+    //         confidence: 0.9,
+    //       ),
+    //     ),
+    //     MessageModel(
+    //       dateTime: DateTime.now(),
+    //       passage: "Sample passage 2",
+    //       report: "Sample report 2",
+    //       speechAnalysisMetrics: SpeechAnalysisMetricsModel(
+    //         transcript: "Sample transcript 2",
+    //         pitch: 0.7,
+    //         pace: 0.8,
+    //         clarity: 0.85,
+    //         volume: 0.8,
+    //         pronunciationAccuracy: 0.9,
+    //         confidence: 0.85,
+    //       ),
+    //     ),
+    //   ]),
+    // );
+    try {
+      final currentUser = locator<SupabaseClient>().auth.currentUser;
+
+      final data = await locator<SupabaseClient>()
+          .from('messages')
+          .select()
+          .eq('user_id', currentUser!.id);
+
+      final messages =
+          data.map((message) => MessageModel.fromJson(message)).toList();
+
+      return Right(messages);
+    } catch (e) {
+      return Left(
+        RecordingFailure('Failed to fetch messages: ${e.toString()}'),
+      );
     }
   }
 }

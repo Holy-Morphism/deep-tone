@@ -11,6 +11,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'Messaging/data/repositories/messaging_repository_implementation.dart';
 import 'Messaging/domain/repositories/messaging_repository.dart';
+import 'Messaging/domain/usecases/generate_passage.dart';
+import 'Messaging/domain/usecases/generate_report.dart';
+import 'Messaging/domain/usecases/get_messages.dart';
 import 'Messaging/domain/usecases/get_mic_permission.dart';
 import 'Messaging/domain/usecases/start_recording.dart';
 import 'Messaging/domain/usecases/stop_recording.dart';
@@ -60,7 +63,7 @@ Future<void> setup() async {
       openaiApiKey: dotenv.env['OPEN_AI_API_KEY']!,
       deepGramApiKey: dotenv.env['DEEPGRAM_API_KEY']!,
       dolbyApiKey: dotenv.env['DOLBY_API_KEY']!,
-      dolbyAppSecret: dotenv.env['DOLBY_API_SECRET']!
+      dolbyAppSecret: dotenv.env['DOLBY_API_SECRET']!,
     ),
   );
 
@@ -68,6 +71,9 @@ Future<void> setup() async {
   locator.registerSingleton<StartRecording>(StartRecording(locator()));
   locator.registerSingleton<StopRecording>(StopRecording(locator()));
   locator.registerSingleton<GetMicPermission>(GetMicPermission(locator()));
+  locator.registerSingleton<GeneratePassage>(GeneratePassage(locator()));
+  locator.registerSingleton<GenerateReport>(GenerateReport(locator()));
+  locator.registerSingleton<GetMessages>(GetMessages(locator()));
 
   //Initializing Messaging Bloc
   locator.registerFactory<MessagingBloc>(
@@ -75,6 +81,9 @@ Future<void> setup() async {
       startRecording: locator(),
       stopRecording: locator(),
       getMicPermission: locator(),
+      generatePassage: locator(),
+      generateReport: locator(),
+      getMessages: locator(),
     ),
   );
 }

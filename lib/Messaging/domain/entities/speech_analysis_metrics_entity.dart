@@ -1,8 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:equatable/equatable.dart';
 
-class ModelMessageEntity extends Equatable {
-  final String report;
+class SpeechAnalysisMetricsEntity extends Equatable {
   final String transcript;
   final double pitch;
   final double pace;
@@ -12,10 +11,8 @@ class ModelMessageEntity extends Equatable {
   final double confidence;
   final double overallScore;
 
-  // Constructor with calculated overall score
-  ModelMessageEntity({
+  SpeechAnalysisMetricsEntity({
     required this.transcript,
-    required this.report,
     required this.pitch,
     required this.pace,
     required this.clarity,
@@ -32,8 +29,7 @@ class ModelMessageEntity extends Equatable {
        );
 
   // Named constructor that allows explicitly setting the overall score
-  const ModelMessageEntity.withOverallScore({
-    required this.report,
+  const SpeechAnalysisMetricsEntity.withOverallScore({
     required this.transcript,
     required this.pitch,
     required this.pace,
@@ -65,7 +61,6 @@ class ModelMessageEntity extends Equatable {
   List<Object> get props {
     return [
       transcript,
-      report,
       pitch,
       pace,
       clarity,
