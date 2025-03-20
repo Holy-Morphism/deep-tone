@@ -24,7 +24,6 @@ class MessageModel extends MessageEntity {
         confidence: double.parse(json['confidence'].toString()),
       ),
     );
-    print(m);
     return m;
   }
 

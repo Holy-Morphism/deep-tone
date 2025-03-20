@@ -42,29 +42,31 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
         } else if (failure is RecordingFailure) {
           emit(MessagingErrorState(failure.message));
         }
-      }, (success) => emit(MessageSuccesState(messages: [])));
+      }, (success) => emit(MessageSuccesState(messages)));
     });
 
     // Load existing messages when app starts
     on<LoadMessagesEvent>((event, emit) async {
       // This would typically load messages from a repository or database
       // For now, we'll just display the current messages list
+      emit(LoadingMessagesState());
       final result = await getMessages();
       result.fold((l) => emit(MessagingErrorState(l.message)), (r) {
-        messages = r;
+        print("in Bloc getMessages:${r}");
+        messages = r.map((model) => model as MessageEntity).toList();
       });
-      emit(MessageSuccesState(messages: messages));
+      emit(MessageSuccesState(messages));
     });
 
     on<GeneratePassageEvent>((event, emit) async {
-      emit(GeneratingPassageState());
+      emit(GeneratingPassageState(messages));
       final result = await generatePassage();
       result.fold((failure) => emit(MessagingErrorState(failure.message)), (
-        succes,
+        success,
       ) {
-        messages.add(MessageEntity(dateTime: DateTime.now(), passage: succes));
-        passage = succes;
-        emit(ReadingPassageState(messages: messages));
+        messages.add(MessageEntity(dateTime: DateTime.now(), passage: success));
+        passage = success;
+        emit(ReadingPassageState(messages));
       });
     });
 
@@ -78,7 +80,7 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
     });
 
     on<StopRecordingEvent>((event, emit) async {
-      emit(AnalysisState());
+      emit(AnalysisState(messages));
       final metrics = await stopRecording();
       metrics.fold((failure) => emit(MessagingErrorState(failure.message)), (
         success,
@@ -92,10 +94,9 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
           ),
         );
         speechAnalysisMetricsEntity = success;
-        // Emit an intermediate state to update the UI
-        emit(AnalysisCompletedState(messages: messages));
+
         // Then emit the report generation state
-        emit(GeneratingReportState());
+        emit(GeneratingReportState(messages));
       });
 
       // Only proceed to generate report if we received valid metrics
@@ -106,7 +107,7 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
         ) {
           messages.removeLast();
           messages.add(success);
-          emit(MessageSuccesState(messages: messages));
+          emit(MessageSuccesState(messages));
         });
       }
     });

@@ -18,153 +18,106 @@ class Message extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              const CircleAvatar(child: Text('🤖')),
-              const SizedBox(width: 8.0),
-              Expanded(child: Text(passage, style: GoogleFonts.poppins())),
-            ],
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              passage,
+              style: GoogleFonts.poppins(fontSize: 14, color: Colors.black87),
+            ),
           ),
           if (speechAnalysisMetricsEntity != null) ...[
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              
-              children: [
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: "Pitch: ",
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-                      ),
-                      TextSpan(
-                        text:
-                            "${speechAnalysisMetricsEntity?.pitch.toStringAsFixed(2)}",
-                        style: GoogleFonts.poppins(),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8.0),
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: "Pace: ",
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-                      ),
-                      TextSpan(
-                        text:
-                            "${speechAnalysisMetricsEntity?.pace.toStringAsFixed(2)}",
-                        style: GoogleFonts.poppins(),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: "Clarity: ",
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-                      ),
-                      TextSpan(
-                        text:
-                            "${speechAnalysisMetricsEntity?.clarity.toStringAsFixed(2)}",
-                        style: GoogleFonts.poppins(),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8.0),
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: "Volume: ",
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-                      ),
-                      TextSpan(
-                        text:
-                            "${speechAnalysisMetricsEntity?.volume.toStringAsFixed(2)}",
-                        style: GoogleFonts.poppins(),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: "Pronunciation: ",
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-                      ),
-                      TextSpan(
-                        text:
-                            "${speechAnalysisMetricsEntity?.pronunciationAccuracy.toStringAsFixed(2)}",
-                        style: GoogleFonts.poppins(),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8.0),
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: "Confidence: ",
-                        style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-                      ),
-                      TextSpan(
-                        text:
-                            "${speechAnalysisMetricsEntity?.confidence.toStringAsFixed(2)}",
-                        style: GoogleFonts.poppins(),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            Text.rich(
-              TextSpan(
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.blue[100]!),
+              ),
+              child: Column(
                 children: [
-                  TextSpan(
-                    text: "Overall: ",
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                  _buildMetricsRow(
+                    "Pitch",
+                    speechAnalysisMetricsEntity!.pitch,
+                    "Pace",
+                    speechAnalysisMetricsEntity!.pace,
                   ),
-                  TextSpan(
-                    text:
-                        "${speechAnalysisMetricsEntity?.overallScore.toStringAsFixed(2)}",
-                    style: GoogleFonts.poppins(),
+                  const SizedBox(height: 8),
+                  _buildMetricsRow(
+                    "Clarity",
+                    speechAnalysisMetricsEntity!.clarity,
+                    "Volume",
+                    speechAnalysisMetricsEntity!.volume,
+                  ),
+                  const SizedBox(height: 8),
+                  _buildMetricsRow(
+                    "Pronunciation",
+                    speechAnalysisMetricsEntity!.pronunciationAccuracy,
+                    "Confidence",
+                    speechAnalysisMetricsEntity!.confidence,
+                  ),
+                  const SizedBox(height: 8),
+                  _buildSingleMetric(
+                    "Overall",
+                    speechAnalysisMetricsEntity!.overallScore,
                   ),
                 ],
               ),
             ),
           ],
-
-          if (report != null)
-            MarkdownWidget(data: report!, shrinkWrap: true)
-          else
-            const SizedBox(),
+          if (report != null) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: MarkdownWidget(data: report!, shrinkWrap: true),
+            ),
+          ],
         ],
       ),
+    );
+  }
+
+  Widget _buildMetricsRow(
+    String label1,
+    double value1,
+    String label2,
+    double value2,
+  ) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(child: _buildSingleMetric(label1, value1)),
+        const SizedBox(width: 16),
+        Expanded(child: _buildSingleMetric(label2, value2)),
+      ],
+    );
+  }
+
+  Widget _buildSingleMetric(String label, double value) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          "$label: ",
+          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13),
+        ),
+        Text(
+          value.toStringAsFixed(2),
+          style: GoogleFonts.poppins(fontSize: 13),
+        ),
+      ],
     );
   }
 }

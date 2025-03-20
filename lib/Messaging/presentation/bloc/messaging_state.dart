@@ -1,54 +1,53 @@
 part of 'messaging_bloc.dart';
 
 sealed class MessagingState extends Equatable {
-  const MessagingState();
+  final List<MessageEntity> messages;
+  const MessagingState(this.messages);
 
   @override
-  List<Object> get props => [];
+  List<Object> get props => [messages];
 }
 
-final class MessagingBlocInitial extends MessagingState {}
+final class MessagingBlocInitial extends MessagingState {
+  const MessagingBlocInitial() : super(const []);
+}
 
 final class MicPermissionDeniedState extends MessagingState {
   final String message;
-  const MicPermissionDeniedState(this.message);
+  const MicPermissionDeniedState(this.message) : super(const []);
+}
+
+final class LoadingMessagesState extends MessagingState {
+  const LoadingMessagesState() : super(const []);
 }
 
 //reading Passage
-final class GeneratingPassageState extends MessagingState {}
+final class GeneratingPassageState extends MessagingState {
+  const GeneratingPassageState(super.messages);
+}
 
 final class ReadingPassageState extends MessagingState {
-  final List<MessageEntity> messages;
-
-  const ReadingPassageState({required this.messages});
+  const ReadingPassageState(super.messages);
 }
 
 // Analysis
 final class RecordingState extends MessagingState {
-  final List<MessageEntity> messages;
-
-  const RecordingState(this.messages);
+  const RecordingState(super.messages);
 }
 
-final class AnalysisState extends MessagingState {}
+final class AnalysisState extends MessagingState {
+  const AnalysisState(super.messages);
+}
 
-final class GeneratingReportState extends MessagingState {}
+final class GeneratingReportState extends MessagingState {
+  const GeneratingReportState(super.messages);
+}
 
 final class MessageSuccesState extends MessagingState {
-  final List<MessageEntity> messages;
-  const MessageSuccesState({required this.messages});
+  const MessageSuccesState(super.messages);
 }
 
 final class MessagingErrorState extends MessagingState {
   final String message;
-  const MessagingErrorState(this.message);
-}
-
-class AnalysisCompletedState extends MessagingState {
-  final List<MessageEntity> messages;
-
-  AnalysisCompletedState({required this.messages});
-
-  @override
-  List<Object> get props => [messages];
+  const MessagingErrorState(this.message) : super(const []);
 }
