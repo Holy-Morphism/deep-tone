@@ -43,3 +43,12 @@ final class MessagingErrorState extends MessagingState {
   final String message;
   const MessagingErrorState(this.message);
 }
+
+class AnalysisCompletedState extends MessagingState {
+  final List<MessageEntity> messages;
+
+  AnalysisCompletedState({required this.messages});
+
+  @override
+  List<Object> get props => [messages];
+}

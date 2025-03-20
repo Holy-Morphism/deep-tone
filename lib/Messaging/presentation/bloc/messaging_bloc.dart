@@ -6,6 +6,7 @@ import '../../domain/entities/message_entity.dart';
 import '../../domain/entities/speech_analysis_metrics_entity.dart';
 import '../../domain/usecases/generate_passage.dart';
 import '../../domain/usecases/generate_report.dart';
+import '../../domain/usecases/get_messages.dart';
 import '../../domain/usecases/get_mic_permission.dart';
 import '../../domain/usecases/start_recording.dart';
 import '../../domain/usecases/stop_recording.dart';
@@ -18,6 +19,7 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
   final GetMicPermission getMicPermission;
   final GeneratePassage generatePassage;
   final GenerateReport generateReport;
+  final GetMessages getMessages;
   String? passage;
   SpeechAnalysisMetricsEntity? speechAnalysisMetricsEntity;
   List<MessageEntity> messages = [];
@@ -28,6 +30,7 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
     required this.getMicPermission,
     required this.generatePassage,
     required this.generateReport,
+    required this.getMessages,
   }) : super(MessagingBlocInitial()) {
     // Get Mic permission
     on<GetMicPermissionEvent>((event, emit) async {
@@ -46,6 +49,10 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
     on<LoadMessagesEvent>((event, emit) async {
       // This would typically load messages from a repository or database
       // For now, we'll just display the current messages list
+      final result = await getMessages();
+      result.fold((l) => emit(MessagingErrorState(l.message)), (r) {
+        messages = r;
+      });
       emit(MessageSuccesState(messages: messages));
     });
 
@@ -55,9 +62,7 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
       result.fold((failure) => emit(MessagingErrorState(failure.message)), (
         succes,
       ) {
-        messages.add(
-          MessageEntity(dateTime: DateTime.now(), passage: succes),
-        );
+        messages.add(MessageEntity(dateTime: DateTime.now(), passage: succes));
         passage = succes;
         emit(ReadingPassageState(messages: messages));
       });
@@ -87,16 +92,23 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
           ),
         );
         speechAnalysisMetricsEntity = success;
+        // Emit an intermediate state to update the UI
+        emit(AnalysisCompletedState(messages: messages));
+        // Then emit the report generation state
         emit(GeneratingReportState());
       });
-      final result = await generateReport();
-      result.fold((failure) => emit(MessagingErrorState(failure.message)), (
-        success,
-      ) {
-        messages.removeLast();
-        messages.add(success);
-        emit(MessageSuccesState(messages: messages));
-      });
+
+      // Only proceed to generate report if we received valid metrics
+      if (speechAnalysisMetricsEntity != null) {
+        final result = await generateReport();
+        result.fold((failure) => emit(MessagingErrorState(failure.message)), (
+          success,
+        ) {
+          messages.removeLast();
+          messages.add(success);
+          emit(MessageSuccesState(messages: messages));
+        });
+      }
     });
   }
 }

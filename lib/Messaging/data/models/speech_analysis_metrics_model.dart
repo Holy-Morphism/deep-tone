@@ -18,7 +18,7 @@ class SpeechAnalysisMetricsModel extends SpeechAnalysisMetricsEntity {
       pace: json['pace'] as double,
       clarity: json['clarity'] as double,
       volume: json['volume'] as double,
-      pronunciationAccuracy: json['pronunciationAccuracy'] as double,
+      pronunciationAccuracy: json['pronunciation'] as double,
       confidence: json['confidence'] as double,
     );
   }
@@ -30,7 +30,7 @@ class SpeechAnalysisMetricsModel extends SpeechAnalysisMetricsEntity {
       'pace': pace,
       'clarity': clarity,
       'volume': volume,
-      'pronunciationAccuracy': pronunciationAccuracy,
+      'pronunciation': pronunciationAccuracy,
       'confidence': confidence,
     };
   }

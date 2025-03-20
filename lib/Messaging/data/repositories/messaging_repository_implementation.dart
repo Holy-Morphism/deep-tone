@@ -213,7 +213,16 @@ class MessagingRepositoryImplementation implements MessagingRepository {
         speechAnalysisMetrics: _speechAnalysisMetricsModel,
       );
 
-      _postMessage(message);
+      final result = await _postMessage(message);
+
+      result.fold(
+        (l) {
+          print(l.message);
+        },
+        (r) {
+          print("Success full posted message");
+        },
+      );
 
       return Right(message);
     } catch (e) {
@@ -235,9 +244,9 @@ class MessagingRepositoryImplementation implements MessagingRepository {
         'pace': message.speechAnalysisMetrics!.pace,
         'clarity': message.speechAnalysisMetrics!.clarity,
         'volume': message.speechAnalysisMetrics!.volume,
-        'pronunciation_accuracy':
-            message.speechAnalysisMetrics!.pronunciationAccuracy,
+        'pronunciation': message.speechAnalysisMetrics!.pronunciationAccuracy,
         'confidence': message.speechAnalysisMetrics!.confidence,
+        'overall_score': message.speechAnalysisMetrics!.overallScore,
       });
 
       return const Right(null);
@@ -248,7 +257,7 @@ class MessagingRepositoryImplementation implements MessagingRepository {
 
   @override
   Future<Either<Failure, List<MessageEntity>>> getMessages() async {
-    // Return a dummy list of messages for testing
+    //Return a dummy list of messages for testing
     // return Future.value(
     //   Right([
     //     MessageModel(
