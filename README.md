@@ -1,6 +1,6 @@
-# **DeepVoice Analyzer** 🎙️  
+# **DeepTone** 🎙️  
 
-**DeepVoice Analyzer** is an AI-powered voice analysis and coaching tool designed to help users develop a deeper, more authoritative voice. By analyzing key vocal parameters such as **pitch, pace, clarity, volume, pronunciation accuracy, and confidence**, the app provides insightful feedback and practical exercises to enhance vocal resonance and control.  
+**DeepTone** is an AI-powered voice analysis and coaching tool designed to help users develop a deeper, more authoritative voice. By analyzing key vocal parameters such as **pitch, pace, clarity, volume, pronunciation accuracy, and confidence**, the app provides statically measured speech metrics, insightful feedback, and practical exercises to enhance vocal resonance and control.  
 
 ## **Features** 🚀  
 
@@ -17,7 +17,7 @@
 3. AI generates a **comprehensive analysis** through ChatGPT and suggests targeted improvements.  
 4. Follow guided exercises to **train your voice for a deeper, richer tone**.  
 
-## **Why Use DeepVoice Analyzer?** 🤔  
+## **Why Use DeepTone?** 🤔  
 
 ✅ **Improve Vocal Confidence** – Speak with clarity and authority in any situation.  
 ✅ **Enhance Communication Skills** – Make a lasting impression in presentations, meetings, or social settings.  
@@ -27,7 +27,7 @@
 
 # DeepTone - AI Voice Coach
 
-DeepTone is a mobile application built with Flutter that uses artificial intelligence to help users improve their vocal skills. Whether you're a singer, public speaker, or someone looking to enhance your vocal delivery, DeepTone provides real-time feedback and personalized coaching.
+DeepTone is a mobile application built with Flutter that uses artificial intelligence to help users deepen their voice through comprehensive analysis. The app provides statically measured speech metrics and personalized coaching to help users achieve a more authoritative, resonant vocal tone. Whether you're a professional speaker, want to sound more confident in meetings, or simply wish to develop a deeper voice, DeepTone offers targeted guidance based on objective analysis.
 
 ## Features
 
@@ -79,9 +79,9 @@ DeepTone is a mobile application built with Flutter that uses artificial intelli
 1. Grant microphone permissions when prompted
 2. Select a training exercise or free practice mode
 3. Follow the on-screen instructions
-4. Receive instant feedback on your vocal performance through Dolby and Deepgram analysis
-5. Review your AI-generated comprehensive report provided by ChatGPT
-6. Review your progress in the analytics section
+4. Receive instant feedback on your vocal performance with precise measurements of pitch, resonance, and other key metrics
+5. Review your AI-generated comprehensive report with specific recommendations to deepen your voice
+6. Track your progress over time with before/after comparisons
 
 ## Contributing
 
