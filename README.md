@@ -1,5 +1,9 @@
 # **DeepTone** 🎙️  
 
+<p align="center">
+  <img src="image/README/deep-tone-cover.jpeg" alt="DeepTone Logo" width="450">
+</p>
+
 **DeepTone** is an AI-powered voice analysis and coaching tool designed to help users develop a deeper, more authoritative voice. By analyzing key vocal parameters such as **pitch, pace, clarity, volume, pronunciation accuracy, and confidence**, the app provides statically measured speech metrics, insightful feedback, and practical exercises to enhance vocal resonance and control.  
 
 ## **Features** 🚀  
@@ -17,6 +21,14 @@
 3. AI generates a **comprehensive analysis** through ChatGPT and suggests targeted improvements.  
 4. Follow guided exercises to **train your voice for a deeper, richer tone**.  
 
+## **App Screenshots** 📱
+
+<p align="center">
+  <img src="image/README/Screenshot_1742505859.png" alt="Voice Analysis Screen" width="300">
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="image/README/Screenshot_1742526063.png" alt="Exercise Screen" width="300">
+</p>
+
 ## **Why Use DeepTone?** 🤔  
 
 ✅ **Improve Vocal Confidence** – Speak with clarity and authority in any situation.  
@@ -26,18 +38,6 @@
 ---
 
 # DeepTone - AI Voice Coach
-
-DeepTone is a mobile application built with Flutter that uses artificial intelligence to help users deepen their voice through comprehensive analysis. The app provides statically measured speech metrics and personalized coaching to help users achieve a more authoritative, resonant vocal tone. Whether you're a professional speaker, want to sound more confident in meetings, or simply wish to develop a deeper voice, DeepTone offers targeted guidance based on objective analysis.
-
-## Features
-
-- **Real-time Voice Analysis**: Analyze pitch, tone, rhythm, and other vocal characteristics in real-time
-- **Personalized Feedback**: Receive AI-powered suggestions tailored to your unique voice
-- **Progress Tracking**: Monitor your improvement over time with detailed analytics
-- **Guided Exercises**: Follow structured vocal exercises designed by professionals
-- **Performance Recording**: Record and review your practice sessions
-- **Custom Goals**: Set specific vocal improvement targets
-
 ## Technology Stack
 
 - Flutter for cross-platform mobile development
