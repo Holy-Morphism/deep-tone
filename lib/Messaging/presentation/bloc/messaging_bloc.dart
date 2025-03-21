@@ -52,7 +52,7 @@ class MessagingBloc extends Bloc<MessagingEvent, MessagingState> {
       emit(LoadingMessagesState());
       final result = await getMessages();
       result.fold((l) => emit(MessagingErrorState(l.message)), (r) {
-        print("in Bloc getMessages:${r}");
+        // ignore: unnecessary_cast
         messages = r.map((model) => model as MessageEntity).toList();
       });
       emit(MessageSuccesState(messages));

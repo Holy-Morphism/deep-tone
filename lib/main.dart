@@ -13,6 +13,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(title: 'Deep Tone', routerConfig: router);
+    return MaterialApp.router(
+      title: 'Deep Tone',
+      routerConfig: router,
+      debugShowCheckedModeBanner: false,
+    );
   }
 }

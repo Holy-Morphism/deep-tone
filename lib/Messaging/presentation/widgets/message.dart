@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:markdown_widget/config/configs.dart';
+import 'package:markdown_widget/markdown_widget.dart';
 import 'package:markdown_widget/widget/markdown.dart';
 
 import '../../domain/entities/speech_analysis_metrics_entity.dart';
@@ -81,7 +83,24 @@ class Message extends StatelessWidget {
                 color: Colors.grey[50],
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: MarkdownWidget(data: report!, shrinkWrap: true),
+              child: MarkdownWidget(
+                data: report!,
+                shrinkWrap: true,
+                config: MarkdownConfig(
+                  configs: [
+                    PreConfig(
+                      textStyle: GoogleFonts.poppins(color: Colors.red),
+                    ),
+                    PConfig(textStyle: GoogleFonts.poppins()),
+                    H1Config(style: GoogleFonts.poppins()),
+                    H2Config(style: GoogleFonts.poppins()),
+                    H3Config(style: GoogleFonts.poppins()),
+                    H4Config(style: GoogleFonts.poppins()),
+                    H5Config(style: GoogleFonts.poppins()),
+                    H6Config(style: GoogleFonts.poppins()),
+                  ],
+                ),
+              ),
             ),
           ],
         ],
