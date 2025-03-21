@@ -5,6 +5,9 @@ on:
     tags:
       - "v*" # Runs only when a tag like v1.0.0 is pushed
 
+permissions:
+  contents: write  # 🔥 Grants permission to create releases
+
 jobs:
   build:
     name: Build Flutter APK
@@ -63,7 +66,7 @@ jobs:
         with:
           files: build/app/outputs/apk/release/*.apk
           tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
+          name: "Release ${{ github.ref_name }}"  # ✅ Fixed key (was release_name)
           body: "Automated Flutter release build."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
