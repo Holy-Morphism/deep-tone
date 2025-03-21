@@ -3,7 +3,7 @@ name: Build and Release Flutter APK
 on:
   push:
     tags:
-      - 'v*'  # Runs only when a tag like v1.0.0 is pushed
+      - "v*" # Runs only when a tag like v1.0.0 is pushed
 
 jobs:
   build:
@@ -17,11 +17,22 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: 3.x  # Use your Flutter version
+          flutter-version: 3.x # Use your Flutter version
           cache: true
 
       - name: Install Dependencies
         run: flutter pub get
+
+      - name: Create .env File from GitHub Secrets
+        run: |
+          echo "DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}" >> .env
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
+          echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> .env
+          echo "SERVICE_ROLE=${{ secrets.SERVICE_ROLE }}" >> .env
+          echo "OPEN_AI_API_KEY=${{ secrets.OPEN_AI_API_KEY }}" >> .env
+          echo "DEEPGRAM_API_KEY=${{ secrets.DEEPGRAM_API_KEY }}" >> .env
+          echo "DOLBY_API_KEY=${{ secrets.DOLBY_API_KEY }}" >> .env
+          echo "DOLBY_API_SECRET=${{ secrets.DOLBY_API_SECRET }}" >> .env
 
       - name: Build Release APKs
         run: flutter build apk --split-per-abi
